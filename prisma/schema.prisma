@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/prisma/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  /// The unique ID of the user.
+  id                Int           @id @default(autoincrement())
+
+  /// The display name of the user.
+  name              String
+
+  /// The profile picture URL of the user.
+  profilePicture    String
+
+  /// The Slack user ID for this user.
+  slackId           String        @unique
+
+  /// The identity vault ID of the user.
+  idvId             String?
+
+  ownedFrames       Frame[]
+  sessions          Session[]
+
+  @@index([slackId])
+}
+
+model Session {
+  /// The unique ID of the session.
+  id                String        @id @default(cuid())
+
+  /// The user ID this session belongs to.
+  userId            Int
+
+  /// The user this session belongs to.
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// When this session was created.
+  createdAt         DateTime      @default(now())
+
+  /// When this session expires.
+  expiresAt         DateTime
+
+  @@index([userId])
+}
+
+/// Represents an iframe on the main canvas.
+model Frame {
+  /// The unique ID of the frame.
+  id        Int           @id @default(autoincrement())
+
+  /// The URL of the frame.
+  url       String
+
+  ownerId   Int
+  owner     User          @relation(fields: [ownerId], references: [id])
+
+  tiles     Tile[]
+}
+
+/// Represents a tile belonging to a `Frame`.
+model Tile {
+  @@id([x, y])
+  x       Int
+  y       Int
+
+  /// The time that this tile has been created or modified at.
+  placedAt    DateTime  @default(now())
+
+  /// Whether this tile is pending approval.
+  isPending   Boolean   @default(false)
+
+  frameId     Int
+  frame       Frame     @relation(fields: [frameId], references: [id])
+}

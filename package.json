@@ -6,9 +6,19 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "db:generate": "prisma generate"
   },
   "dependencies": {
-    "astro": "^5.14.4"
+    "@astrojs/check": "^0.9.5",
+    "@prisma/client": "^6.17.1",
+    "@types/jsonwebtoken": "^9.0.10",
+    "astro": "^5.14.4",
+    "crypto-js": "^4.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "prisma": "^6.17.1",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "zod": "^4.1.12"
   }
 }

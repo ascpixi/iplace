@@ -1,5 +1,17 @@
 ---
+import { TILE_SIZE, CANVAS_WIDTH, CANVAS_HEIGHT, FRAME_CREATE_FORM_URL } from "../config";
+import { getCurrentUser } from "../lib/server-auth";
 
+import prisma from "../lib/prisma";
+import type * as db from "../generated/prisma";
+
+const currentUser = await getCurrentUser(Astro);
+let userFrames: db.Frame[] = [];
+if (currentUser) {
+  userFrames = await prisma.frame.findMany({
+    where: { ownerId: currentUser.id }
+  })
+}
 ---
 
 <html lang="en">
@@ -8,9 +20,690 @@
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
+    <link rel="preload" href={FRAME_CREATE_FORM_URL} as="document" />
+		<title>&lt;iplace&gt;</title>
 	</head>
+
+  <style is:global>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap');
+
+    * {
+      box-sizing: border-box;
+      font-family: "IBM Plex Mono", "Cascadia Code", "JetBrains Mono", "Consolas", monospace;
+    }
+
+    html, body {
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      border: none;
+    }
+
+    body {
+      width: 100vw;
+      height: 100vh;
+      position: absolute;
+      top: 0;
+      left: 0;
+      background: #aaa;
+    }
+
+    body, main {
+      user-select: none;
+    }
+
+    main {
+      background: #fff;
+    }
+
+    main.place-mode {
+      background-image: 
+        linear-gradient(to right, #ddd 1px, transparent 1px),
+        linear-gradient(to bottom, #ddd 1px, transparent 1px);
+      background-size: 100px 100px;
+    }
+
+    #hover-tile {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 2px solid #000;
+      pointer-events: none;
+      display: none;
+      z-index: 5;
+    }
+
+    .tile {
+      position: absolute;
+      border: 1px solid #aaa;
+      border-bottom: none;
+      border-right: none;
+      width: 100px;
+      height: 100px;
+    }
+
+    body > * {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    #toolbox {
+      width: 100%;
+      height: 100%;
+      padding: 2em;
+    }
+
+    #notice-overlay {
+      padding: 2em;
+      display: flex;
+      width: 100%;
+      height: 100%;
+      justify-content: flex-end;
+      z-index: 10;
+
+      & .notice {
+        width: 50%;
+        height: min-content;
+        display: flex;
+        flex-direction: column;
+        user-select: text;
+        cursor: default;
+        background: #fff;
+
+        & .titlebar {
+          padding: .5em 1em;
+          border: 2px solid black;
+          height: min-content;
+          display: flex;
+          justify-content: space-between;
+
+          #notice-control {
+            cursor: pointer;
+          }
+        }
+
+        & .content {
+          padding: 1em;
+          border: 2px solid black;
+          border-top: none;
+          height: min-content;
+          width: 100%;
+
+          display: flex;
+          flex-direction: column;
+          gap: 1em;
+        }
+      }
+
+      &.minimized {
+        & .notice {
+          width: 25%;
+          transition: width .25s;
+
+          &:hover {
+            opacity: 1;
+            width: 50%;
+          }
+
+          & .content {
+            display: none;
+          }
+        }
+      }
+    }
+
+    button {
+      display: block;
+      background: #fff;
+      border: 2px solid #000;
+      font-size: 1em;
+      padding: .5em 1em;
+      width: 100%;
+      transition: color .25s, background .25s;
+      cursor: pointer;
+      
+      &:hover {
+        background: #000;
+        color: #fff;
+      }
+    }
+
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    details {
+      &[open] {
+        summary {
+          &::marker {
+            content: "[v] ";
+          }
+        }
+      }
+
+      summary {
+        border: 2px solid black;
+        padding: .5em 1em;
+        cursor: pointer;
+
+        transition: background .25s, color .25s;
+        &:hover {
+          background: #000;
+          color: #fff;
+        }
+
+        &::marker {
+          margin-right: 32px;
+          content: "[>] ";
+        }
+      }
+    }
+
+    #create-frame-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 20;
+
+      .modal-backdrop {
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 2em;
+      }
+
+      .modal-window {
+        width: 90%;
+        height: 90%;
+        max-width: 900px;
+        max-height: 900px;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        
+        .titlebar {
+          padding: .5em 1em;
+          border: 2px solid black;
+          height: min-content;
+          display: flex;
+          justify-content: space-between;
+
+          #modal-close {
+            cursor: pointer;
+          }
+        }
+
+        .modal-content {
+          flex: 1;
+          border: 2px solid black;
+          border-top: none;
+          overflow: hidden;
+
+          iframe {
+            border: none;
+            display: block;
+          }
+        }
+      }
+    }
+  </style>
+
 	<body>
-		<h1>Astro</h1>
+    <main
+      style={{
+        width: `${TILE_SIZE * CANVAS_WIDTH}px`,
+        height: `${TILE_SIZE * CANVAS_HEIGHT}px`
+      }}
+    />
+
+    <div id="notice-overlay">
+      <div class="notice">
+        <div class="titlebar">
+          <div>Hack Club's <b>&lt;iplace&gt;</b></div>
+          <div role="button" title="Minimize" id="notice-control">[x]</div>
+        </div>
+
+        <div class="content">
+          <p>
+            This is a public canvas of <b>&lt;iframe&gt;</b> elements. Each hour of coding allows you to
+            place one 100x100px tile and gives you <b>$5</b> in hosting credit!
+          </p>
+
+          { currentUser ? (
+            <div class="buttons">
+              <details>
+                <summary>Your frames</summary>
+                <div class="content">
+                  { userFrames.length == 0 && <p>You have no frames yet!</p> }
+
+                  <button id="btn-create-frame">Create new frame</button>
+                </div>
+              </details>
+
+              <button id="btn-place">Place a frame</button>
+            </div>
+          ) : (
+            <div class="buttons">
+              <button id="btn-login">Log in with Hack Club's Slack</button>
+            </div>
+          ) }
+        </div>
+      </div>
+    </div>
+
+    <div id="edit-layer">
+
+    </div>
+
+    { currentUser && (
+      <div id="create-frame-modal" style="display: none;">
+        <div class="modal-backdrop">
+          <div class="modal-window">
+            <div class="titlebar">
+              <div>Create frame</div>
+              <div role="button" title="Close" id="modal-close">[x]</div>
+            </div>
+            <div class="modal-content">
+              <iframe id="create-frame-iframe" sandbox="allow-same-origin allow-scripts allow-forms" width="100%" height="100%"></iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+    ) }
+
+    <div id="hover-tile"></div>
+    <script is:inline define:vars={{ currentUserId: currentUser?.id || null }}>
+      // Global variables passed from server
+      if (currentUserId) {
+        console.log("(ok) User authenticated:", currentUserId);
+      }
+    </script>
+		
+    <script>
+      import { CANVAS_HEIGHT, CANVAS_WIDTH, TILE_SIZE } from "../config";
+      import { assert, type Vector2 } from "../util";
+      import type { ApiTile, ApiFrame, ApiMapResponse } from "./api/map";
+
+      const body = document.body;
+      const main = document.querySelector("main")!;
+
+      let offset = { x: 0, y: 0 };
+      let dragStart = { x: 0, y: 0 };
+      let isDragging = false;
+
+      const map: ApiMapResponse = await fetch("/api/map").then(x => x.json());
+      console.log("(ok) map fetched!", map);
+
+      const frames = new Map(map.frames.map(x => [x.id, x]));
+
+      const tiles = new Array<ApiTile | undefined>(CANVAS_WIDTH * CANVAS_HEIGHT);
+      for (const tile of map.tiles) {
+        tiles[tile.x + (tile.y * CANVAS_WIDTH)] = tile;
+      }
+
+      const getTileByCoord = (x: number, y: number) => tiles[x + (y * CANVAS_WIDTH)];
+      const getFrameById = (id: number) => frames.get(id);
+
+      const loadedFrameIds = new Set<number>();
+
+      /**
+       * Converts a screen-space coordinate to a tile-space one.
+       */
+      function screenToTile(coord: Vector2): Vector2 {
+        return {
+          x: Math.max(0, Math.floor(coord.x / TILE_SIZE)),
+          y: Math.max(0, Math.floor(coord.y / TILE_SIZE))
+        };
+      }
+
+      async function setOffset(value: Vector2) {
+        offset = value;
+        main.style.transform = `translate(${offset.x}px, ${offset.y}px)`;
+
+        const tlTile = screenToTile(value);
+        const brTile = screenToTile({
+          x: value.x + (CANVAS_WIDTH * TILE_SIZE),
+          y: value.y + (CANVAS_HEIGHT * TILE_SIZE)
+        });
+
+        // Wait a short while, and check if the value has changed again - if so, we won't bother
+        // with updating the tiles that were on the screen for less than (N)ms.
+        // await sleep(50);
+        if (value.x != offset.x || value.y != offset.y) {
+          console.log("Value changed", value, offset);
+          return;
+        }
+
+        // Load every tile in the visible region.
+        for (let x = tlTile.x; x < brTile.x; x++) {
+          for (let y = tlTile.y; y < brTile.y; y++) {
+            updateTileAt(x, y);
+          }
+        }
+      }
+
+      function setIsDragging(value: boolean) {
+        isDragging = value;
+        body.style.cursor = value ? "grabbing" : "grab";
+      }
+
+      /**
+       * Makes sure the tile at `(x, y)` is loaded, alongside its corresponding `<iframe>` element.
+       */
+      function updateTileAt(x: number, y: number) {
+        const tile = getTileByCoord(x, y);
+        if (!tile)
+          return; // no tile is present at the given location
+
+        const frame = getFrameById(tile?.frame);
+        assert(frame != undefined);
+
+        ensureFrameLoaded(frame);
+      }
+
+      function ensureFrameLoaded(frame: ApiFrame) {
+        if (loadedFrameIds.has(frame.id))
+          return;
+
+        console.log("(ensureFrameLoaded) loading frame", frame);
+
+        // Calculate the bounding box of the iframe. The bounding box encapsulates all of the tiles of
+        // the frame in a tight fit.
+        let x1 = Infinity, y1 = Infinity; // top-left, absolute
+        let x2 = -Infinity, y2 = -Infinity; // bottom-right, absolute
+        let layoutCount = 0;
+
+        for (const tile of map.tiles) {
+          if (tile.frame != frame.id)
+            continue;
+
+          layoutCount++;
+
+          if (x1 > tile.x) { x1 = tile.x; }
+          if (y1 > tile.y) { y1 = tile.y; }
+
+          if (x2 < tile.x) { x2 = tile.x; }
+          if (y2 < tile.y) { y2 = tile.y; }
+        }
+        
+        assert(layoutCount != 0);
+        assert(x1 != Infinity && y1 != Infinity, `x1 = ${x1}, y1 = ${y1}`);
+        assert(x2 != -Infinity && y2 != -Infinity, `x2 = ${x2}, y2 = ${y2}`);
+
+        const width = x2 - x1;
+        const height = y2 - y1;
+
+        // Now that we computed the width/height, let's check if the layout points form a rectangle.
+        // If so, we can skip masking (since this iframe would cover the entire bounding rectangle)
+        let needsMask = true;
+        if (layoutCount == width * height) {
+          needsMask = false;
+
+          for (let x = x1; x < x2; x++) {
+            for (let y = y1; y < y2; y++) {
+              // If we're missing any tile in the rectangle, that means that we do have to compute a mask.
+              const tile = getTileByCoord(x, y);
+              if (!tile || tile.frame != frame.id) {
+                needsMask = true;
+                break;
+              }
+            }
+
+            if (needsMask)
+              break;
+          }
+        }
+
+        const iframe = new HTMLIFrameElement();
+        iframe.src = frame.url;
+        iframe.loading = "lazy";
+        iframe.sandbox = "allow-same-origin allow-scripts";
+        iframe.width = `${width * TILE_SIZE}`;
+        iframe.height = `${height * TILE_SIZE}`;
+        iframe.style.left = `${x1 * TILE_SIZE}px`;
+        iframe.style.top = `${y1 * TILE_SIZE}px`;
+        iframe.allow = "accelerometer; cross-origin-isolated; gyroscope; magnetometer; encrypted-media";
+        iframe.dataset.id = `${frame.id}`;
+        iframe.className = "tile";
+
+        // We might not need a mask - if this is a filled rect, then we can skip this step.
+        if (needsMask) {
+          let mask = `<svg xmlns="http://www.w3.org/2000/svg" width="${width * TILE_SIZE}" height="${height * TILE_SIZE}" viewBox="0 0 ${width * TILE_SIZE} ${height * TILE_SIZE}" fill="#000">`;
+          
+          for (const tile of map.tiles) {
+            if (tile.frame != frame.id)
+              continue;
+
+            assert(tile.x >= x1 && tile.y >= y1, `x1 = ${x1}, tile.x = ${tile.x}, y1 = ${y1}, tile.y = ${tile.y}`);
+            assert(tile.x <= x2 && tile.y <= y2, `x2 = ${x2}, tile.x = ${tile.x}, y2 = ${y2}, tile.y = ${tile.y}`);
+
+            mask += `<rect width="${TILE_SIZE}" height="${TILE_SIZE}" x="${(tile.x - x1) * TILE_SIZE}" y="${(tile.y - y1) * TILE_SIZE}" />`;
+          }
+
+          mask += "</svg>";
+
+          iframe.style.maskImage = `url("data:image/svg+xml;base64,${btoa(mask)}")`;
+          iframe.style.maskMode = "luminance";
+        }
+
+        main.append(iframe);
+        loadedFrameIds.add(frame.id);
+
+        console.log("(ensureFrameLoaded) iframe created:", iframe);
+      }
+
+      body.addEventListener("mousedown", (ev) => {
+        setIsDragging(true);
+        dragStart = {
+          x: ev.clientX - offset.x,
+          y: ev.clientY - offset.y
+        };
+
+        if (isPlaceMode) {
+          clickStartPos = { x: ev.clientX, y: ev.clientY };
+        }
+      });
+
+      body.addEventListener("mousemove", (ev) => {
+        if (!isDragging)
+          return;
+
+        setOffset({
+          x: ev.clientX - dragStart.x,
+          y: ev.clientY - dragStart.y
+        });
+      });
+
+      body.addEventListener("mouseup", (ev) => {
+        setIsDragging(false);
+      });
+
+      body.addEventListener("touchstart", (ev) => {
+        const touch = ev.touches[0];
+        setIsDragging(true);
+        dragStart = {
+          x: touch.clientX - offset.x,
+          y: touch.clientY - offset.y
+        };
+
+        if (isPlaceMode) {
+          clickStartPos = { x: touch.clientX, y: touch.clientY };
+        }
+      });
+
+      body.addEventListener("touchmove", (ev) => {
+        if (!isDragging)
+          return;
+
+        const touch = ev.touches[0];
+        setOffset({
+          x: touch.clientX - dragStart.x,
+          y: touch.clientY - dragStart.y
+        });
+      });
+
+      body.addEventListener("touchend", (ev) => {
+        setIsDragging(false);
+      });
+
+      const btnPlace = document.querySelector<HTMLButtonElement>("#btn-place");
+      const hoverTile = document.querySelector<HTMLDivElement>("#hover-tile")!;
+      
+      let isPlaceMode = false;
+      let clickStartPos: Vector2 | null = null;
+      let currentHoverTileX: number | null = null;
+      let currentHoverTileY: number | null = null;
+
+      function setPlaceMode(value: boolean) {
+        isPlaceMode = value;
+        main.classList.toggle("place-mode", value);
+        hoverTile.style.display = value ? "block" : "none";
+        
+        if (btnPlace) {
+          btnPlace.textContent = value ? "Exit place mode" : "Place a frame";
+        }
+
+        if (!value) {
+          hoverTile.style.display = "none";
+        }
+      }
+
+      function updateHoverTile(screenCoord: Vector2) {
+        if (!isPlaceMode)
+          return;
+
+        const canvasX = screenCoord.x - offset.x; // screen-space -> canvas-space coords
+        const canvasY = screenCoord.y - offset.y;
+        const tileX = Math.floor(canvasX / TILE_SIZE);
+        const tileY = Math.floor(canvasY / TILE_SIZE);
+
+        if (tileX < 0 || tileX >= CANVAS_WIDTH || tileY < 0 || tileY >= CANVAS_HEIGHT) {
+          // We're out-of-bounds here.
+          hoverTile.style.display = "none";
+          currentHoverTileX = null;
+          currentHoverTileY = null;
+          return;
+        }
+
+        hoverTile.style.left = `${(tileX * TILE_SIZE) + offset.x}px`;
+        hoverTile.style.top = `${(tileY * TILE_SIZE) + offset.y}px`;
+        hoverTile.style.display = "block";
+
+        currentHoverTileX = tileX;
+        currentHoverTileY = tileY;
+      }
+
+      if (btnPlace) {
+        btnPlace.addEventListener("click", () => {
+          setPlaceMode(!isPlaceMode);
+        });
+      }
+
+      // Override existing mousemove handler to include place mode
+      body.addEventListener("mousemove", (ev) => {
+        if (isPlaceMode) {
+          updateHoverTile({ x: ev.clientX, y: ev.clientY });
+        }
+      });
+
+      body.addEventListener("click", (ev) => {
+        if (isPlaceMode && clickStartPos) {
+          if ((ev.target as Element).closest(".notice")) {
+            clickStartPos = null;
+            return;
+          }
+          
+          // We don't want to capture clicks that might be drags.
+          const deltaX = Math.abs(ev.clientX - clickStartPos.x);
+          const deltaY = Math.abs(ev.clientY - clickStartPos.y);
+          const maxClickDistance = 5; // pixels
+          
+          if (
+            deltaX <= maxClickDistance &&
+            deltaY <= maxClickDistance &&
+            currentHoverTileX !== null &&
+            currentHoverTileY !== null
+          ) {
+            handlePlace(currentHoverTileX, currentHoverTileY);
+          }
+          
+          clickStartPos = null;
+        }
+      });
+
+      function handlePlace(x: number, y: number) {
+        alert(`Tile coordinates: (${x}, ${y})`);
+      }
+    </script>
+
+    <script>
+      const overlay = document.querySelector<HTMLDivElement>("#notice-overlay")!;
+      const control = document.querySelector<HTMLDivElement>("#notice-control")!;
+      control.addEventListener("click", (ev) => {
+        overlay.classList.toggle("minimized");
+        control.innerText = overlay.classList.contains("minimized") ? "[^]" : "[x]";
+      });
+    </script>
+
+    <script>
+      const btnLogin = document.querySelector<HTMLButtonElement>("#btn-login");
+      if (btnLogin) {
+        btnLogin.addEventListener("click", () => {
+          const url = new URL("https://slack.com/oauth/v2/authorize");
+          url.searchParams.set("client_id", import.meta.env.PUBLIC_SLACK_CLIENT_ID);
+          url.searchParams.set("user_scope", "identity.basic,identity.email");
+          url.searchParams.set("redirect_uri", `${location.origin}/api/slack-callback`);
+
+          location.href = url.toString();
+        });
+      }
+    </script>
+
+    <script>
+      import { FRAME_CREATE_FORM_URL } from "../config";
+
+      const btnCreateFrame = document.querySelector<HTMLButtonElement>("#btn-create-frame");
+      const createFrameModal = document.querySelector<HTMLDivElement>("#create-frame-modal");
+      const createFrameIframe = document.querySelector<HTMLIFrameElement>("#create-frame-iframe");
+      const modalClose = document.querySelector<HTMLDivElement>("#modal-close");
+
+      if (btnCreateFrame && createFrameModal && createFrameIframe && modalClose) {
+        btnCreateFrame.addEventListener("click", () => {
+          // Set the iframe src only when opening the modal
+          createFrameIframe.src = FRAME_CREATE_FORM_URL;
+          createFrameModal.style.display = "block";
+        });
+
+        modalClose.addEventListener("click", () => {
+          createFrameModal.style.display = "none";
+          // Clear the iframe src to stop loading
+          createFrameIframe.src = "";
+        });
+
+        // Close modal when clicking on backdrop
+        createFrameModal.addEventListener("click", (ev) => {
+          if (ev.target === createFrameModal || (ev.target as Element).classList.contains("modal-backdrop")) {
+            createFrameModal.style.display = "none";
+            createFrameIframe.src = "";
+          }
+        });
+      }
+    </script>
+
+
 	</body>
 </html>
