@@ -1,118 +1,77 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
 import { getUserFromRequest, notAuthedResponse } from "../../lib/auth";
-import { validateRequestBody } from "../../lib/api-schemas";
+import { jsonError, jsonResponse, validateRequestBody } from "../../lib/api-util";
 import prisma from "../../lib/prisma";
 
 const PlaceTileSchema = z.object({
-  x: z.number().int("x must be an integer"),
-  y: z.number().int("y must be an integer"),
-  frameId: z.number().int("frameId must be an integer").positive("frameId must be positive")
+    x: z.number().int("x must be an integer"),
+    y: z.number().int("y must be an integer"),
+    frameId: z.number().int("frameId must be an integer").positive("frameId must be positive")
 });
 
 export const POST: APIRoute = async ({ request }) => {
-  try {
     const user = await getUserFromRequest(request);
     if (!user)
         return notAuthedResponse();
-      
+
     const validation = await validateRequestBody(request, PlaceTileSchema);
     if (!validation.success)
-      return validation.response;
-    
+        return validation.response;
+
     const { x, y, frameId } = validation.data;
 
     const frame = await prisma.frame.findUnique({
-      where: { id: frameId }
+        where: { id: frameId }
     });
 
-    if (!frame) {
-      return new Response(JSON.stringify({ error: "Frame not found" }), {
-        status: 404,
-        headers: { "Content-Type": "application/json" }
-      });
-    }
+    if (!frame)
+        return jsonError(404, "Frame not found");
 
-    if (frame.isPending) {
-      return new Response(JSON.stringify({ error: "Cannot place tiles on pending frames" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" }
-      });
-    }
+    if (frame.isPending)
+        return jsonError(400, "Cannot place tiles on pending frames");
 
-    if (frame.ownerId !== user.id) {
-      return new Response(JSON.stringify({ error: "You can only place tiles on your own frames" }), {
-        status: 403,
-        headers: { "Content-Type": "application/json" }
-      });
-    }
+    if (frame.ownerId !== user.id)
+        return jsonError(403, "You can only place tiles on your own frames");
 
-    // Check if there's enough approved time for another tile (1 hour = 3600 seconds per tile)
     const requiredTime = (frame.placedTiles + 1) * 3600;
-    if (!frame.approvedTime || frame.approvedTime - requiredTime < 0) {
-      return new Response(JSON.stringify({ 
-        error: "Insufficient approved time to place another tile",
-        currentTime: frame.approvedTime || 0,
-        requiredTime,
-        placedTiles: frame.placedTiles
-      }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" }
-      });
-    }
+    if (!frame.approvedTime || frame.approvedTime - requiredTime < 0)
+        return jsonError(400, "Insufficient approved time to place another tile");
 
-    // Check if tile position is already occupied
     const existingTile = await prisma.tile.findUnique({
-      where: { x_y: { x, y } }
+        where: { x_y: { x, y } }
     });
 
-    if (existingTile) {
-      return new Response(JSON.stringify({ error: "Position already occupied" }), {
-        status: 409,
-        headers: { "Content-Type": "application/json" }
-      });
-    }
+    if (existingTile)
+        return jsonError(409, "Position already occupied");
 
-    // Create the tile and increment placedTiles counter
     const [tile, updatedFrame] = await prisma.$transaction([
-      prisma.tile.create({
-        data: {
-          x,
-          y,
-          frameId
-        }
-      }),
-      prisma.frame.update({
-        where: { id: frameId },
-        data: {
-          placedTiles: frame.placedTiles + 1
-        }
-      })
+        prisma.tile.create({
+            data: {
+                x,
+                y,
+                frameId
+            }
+        }),
+        prisma.frame.update({
+            where: { id: frameId },
+            data: {
+                placedTiles: frame.placedTiles + 1
+            }
+        })
     ]);
 
-    return new Response(JSON.stringify({
-      success: true,
-      tile: {
-        x: tile.x,
-        y: tile.y,
-        frameId: tile.frameId,
-        placedAt: tile.placedAt
-      },
-      frame: {
-        placedTiles: updatedFrame.placedTiles,
-        remainingTime: (updatedFrame.approvedTime || 0) - (updatedFrame.placedTiles * 3600)
-      }
-    }), {
-      status: 201,
-      headers: { "Content-Type": "application/json" }
+    return jsonResponse({
+        success: true,
+        tile: {
+            x: tile.x,
+            y: tile.y,
+            frameId: tile.frameId,
+            placedAt: tile.placedAt
+        },
+        frame: {
+            placedTiles: updatedFrame.placedTiles,
+            remainingTime: (updatedFrame.approvedTime || 0) - (updatedFrame.placedTiles * 3600)
+        }
     });
-
-  } catch (error) {
-    return new Response(JSON.stringify({
-      error: error instanceof Error ? error.message : "Failed to place tile"
-    }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" }
-    });
-  }
 };

@@ -47,7 +47,6 @@ export const GET: APIRoute = async (req) => {
         return new Response("Sorry, <iplace> is still under development! Please check back later.");
     }
 
-    // Find or create user
     let user = await prisma.user.findUnique({
         where: { slackId }
     });
@@ -62,7 +61,6 @@ export const GET: APIRoute = async (req) => {
         });
         console.log("(ok) New user created:", user.id);
     } else {
-        // Update user info in case it changed
         user = await prisma.user.update({
             where: { id: user.id },
             data: {
@@ -73,11 +71,9 @@ export const GET: APIRoute = async (req) => {
         console.log("(ok) Existing user updated:", user.id);
     }
 
-    // Create session
     const sessionId = await createSession(user.id);
     console.log("(ok) User session created:", user.id);
 
-    // Set session cookie and redirect to home
     const response = req.redirect("/");
     response.headers.set("Set-Cookie", `session=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${30 * 24 * 60 * 60}`); // 30 days
     return response;

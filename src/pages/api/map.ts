@@ -1,8 +1,8 @@
 import type { APIRoute } from "astro";
 
 import type { Frame, User } from "../../prisma/generated/client";
-import { getUserFromRequest } from "../../lib/auth";
 import prisma from "../../lib/prisma";
+import { jsonResponse } from "../../lib/api-util";
 
 /**
  * Represents a single tile. Corresponds to `db.Tile`.
@@ -79,5 +79,5 @@ export const GET: APIRoute = async ({ request }) => {
         tiles: tiles.map(x => ({ x: x.x, y: x.y, frame: x.frameId }))
     };
 
-    return new Response(JSON.stringify(response));
+    return jsonResponse(response);
 }

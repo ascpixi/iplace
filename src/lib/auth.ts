@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import prisma from "./prisma";
 import type * as db from "../prisma/generated/client";
+import { jsonError } from "./api-util";
 
 const JWT_SECRET = import.meta.env.JWT_SECRET;
 
@@ -71,13 +72,7 @@ export async function cleanExpiredSessions() {
 }
 
 export function notAuthedResponse() {
-  return new Response(
-    JSON.stringify({ error: "Not authenticated" }),
-    {
-      status: 401,
-      headers: { "Content-Type": "application/json" }
-    }
-  );
+  return jsonError(401, "Not authenticated");
 }
 
 export async function getUserFromRequest(request: Request): Promise<db.User | null> {
@@ -98,13 +93,9 @@ export async function getUserFromRequest(request: Request): Promise<db.User | nu
   }
 }
 
-export function validateInternalSecret(secret: string | undefined): Response | null {
-  if (!secret || secret !== import.meta.env.INTERNAL_SECRET_TOKEN) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" }
-    });
-  }
+export function validateInternalSecret(secret: string | undefined): boolean {
+  if (!secret || secret !== import.meta.env.INTERNAL_SECRET_TOKEN)
+    return false;
 
-  return null;
+  return true;
 }

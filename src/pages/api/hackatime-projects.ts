@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { getUserFromRequest, notAuthedResponse } from "../../lib/auth";
 import { Hackatime } from "../../hackatime";
 import { BEGIN_DATE } from "../../config";
+import { jsonResponse } from "../../lib/api-util";
 
 const hackatime = new Hackatime(import.meta.env.HACKATIME_ADMIN_KEY);
 
@@ -15,42 +16,24 @@ interface ApiHackatimeProject {
 }
 
 export const POST: APIRoute = async ({ request }) => {
-    try {
-        const user = await getUserFromRequest(request);
-        if (!user)
-            return notAuthedResponse();
+    const user = await getUserFromRequest(request);
+    if (!user)
+        return notAuthedResponse();
 
-        const allProjects = await hackatime.getProjectsFor(user.slackId);
+    const allProjects = await hackatime.getProjectsFor(user.slackId);
 
-        const response: ApiHackatimeProjectsResponse = {
-            projects: allProjects
-                .filter(x => new Date(x.last_heartbeat) >= BEGIN_DATE)
-                .filter(x => x.total_seconds > 60/*min*/ * 60/*sec*/)
-                .filter(x => x.total_heartbeats > 0)
-                .map(x => (
-                    {
-                        name: x.name,
-                        seconds: x.total_seconds
-                    } satisfies ApiHackatimeProject
-                ))
-        };
-
-        return new Response(JSON.stringify(response), {
-            status: 200,
-            headers: { "Content-Type": "application/json" }
-        });
-    }
-    catch (error) {
-        return new Response(
-            JSON.stringify(
+    const response: ApiHackatimeProjectsResponse = {
+        projects: allProjects
+            .filter(x => new Date(x.last_heartbeat) >= BEGIN_DATE)
+            .filter(x => x.total_seconds > 60/*min*/ * 60/*sec*/)
+            .filter(x => x.total_heartbeats > 0)
+            .map(x => (
                 {
-                    error: error instanceof Error ? error.message : "Internal server error"
-                }
-            ),
-            {
-                status: 500,
-                headers: { "Content-Type": "application/json" }
-            }
-        );
-    }
+                    name: x.name,
+                    seconds: x.total_seconds
+                } satisfies ApiHackatimeProject
+            ))
+    };
+
+    return jsonResponse(response);
 };
