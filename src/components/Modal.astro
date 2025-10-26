@@ -25,7 +25,7 @@ const {
     <div class="modal-window">
       <div class="titlebar">
         <div>{title}</div>
-        <div role="button" title="Close" id={closeButtonId}>[x]</div>
+        <div role="button" class="close-btn" title="Close" id={closeButtonId}>[x]</div>
       </div>
       <div class="modal-content">
         <slot />
@@ -84,6 +84,10 @@ const {
           border: none;
           display: block;
         }
+      }
+
+      .close-btn {
+        cursor: pointer;
       }
     }
   }
