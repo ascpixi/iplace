@@ -28,13 +28,13 @@ const { id = "notice-overlay", minimized = false } = Astro.props;
     justify-content: flex-end;
     z-index: 10;
     pointer-events: none;
+    user-select: none;
 
     & .notice {
       width: 50%;
       height: min-content;
       display: flex;
       flex-direction: column;
-      user-select: text;
       cursor: default;
       background: #fff;
       pointer-events: all;
