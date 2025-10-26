@@ -245,8 +245,8 @@ if (currentUser) {
         Hold <b>Shift</b> and drag to explore the canvas.
       </p>
 
-      { currentUser ? (
-        <div class="buttons">
+      <div class="buttons">
+        { currentUser ? (
           <Details summary="Your frames">
             <div class="content">
               { userFrames.length == 0 && <p>You have no frames yet!</p> }
@@ -267,12 +267,12 @@ if (currentUser) {
               <Button id="btn-create-frame">Create a frame</Button>
             </div>
           </Details>
-        </div>
-      ) : (
-        <div class="buttons">
+        ) : (
           <Button id="btn-login">Log in with Hack Club's Slack</Button>
-        </div>
-      ) }
+        ) }
+
+        <Button id="btn-random">Take me somewhere random</Button>
+      </div>
     </NoticeOverlay>
 
     { currentUser && (
@@ -362,6 +362,38 @@ if (currentUser) {
         }, 500);
       }
 
+      // Get random offset for a tile with a frame
+      function getRandomTileOffset(): Vector2 {
+        // Pick a random tile that has a frame
+        const tilesWithFrames = map.tiles.filter(tile => {
+          const frame = map.frames.find(f => f.id === tile.frame);
+          return frame !== undefined;
+        });
+        
+        if (tilesWithFrames.length > 0) {
+          const randomTile = tilesWithFrames[Math.floor(Math.random() * tilesWithFrames.length)];
+          // Convert tile coordinates to screen-space offset (center the view on this tile)
+          const tileScreenX = randomTile.x * TILE_SIZE;
+          const tileScreenY = randomTile.y * TILE_SIZE;
+          
+          // Center the viewport on this tile by offsetting to bring it to center
+          const viewportCenterX = window.innerWidth / 2;
+          const viewportCenterY = window.innerHeight / 2;
+          
+          const offset = {
+            x: viewportCenterX - tileScreenX,
+            y: viewportCenterY - tileScreenY
+          };
+          
+          console.log("Using random tile:", randomTile, "converted to offset:", offset);
+          return offset;
+        } else {
+          // Fallback if no tiles with frames exist
+          console.log("No tiles with frames found, using origin");
+          return { x: 0, y: 0 };
+        }
+      }
+
       // Initialize offset from hash or random coordinates
       function initializeOffset() {
         const hash = window.location.hash.substring(1); // Remove the '#'
@@ -377,32 +409,7 @@ if (currentUser) {
         }
         
         if (initialOffset.x === 0 && initialOffset.y === 0) {
-          // Pick a random tile that has a frame
-          const tilesWithFrames = map.tiles.filter(tile => {
-            const frame = map.frames.find(f => f.id === tile.frame);
-            return frame !== undefined;
-          });
-          
-          if (tilesWithFrames.length > 0) {
-            const randomTile = tilesWithFrames[Math.floor(Math.random() * tilesWithFrames.length)];
-            // Convert tile coordinates to screen-space offset (center the view on this tile)
-            const tileScreenX = randomTile.x * TILE_SIZE;
-            const tileScreenY = randomTile.y * TILE_SIZE;
-            
-            // Center the viewport on this tile by offsetting to bring it to center
-            const viewportCenterX = window.innerWidth / 2;
-            const viewportCenterY = window.innerHeight / 2;
-            
-            initialOffset = {
-              x: viewportCenterX - tileScreenX,
-              y: viewportCenterY - tileScreenY
-            };
-            console.log("Using random tile:", randomTile, "converted to offset:", initialOffset);
-          } else {
-            // Fallback if no tiles with frames exist
-            initialOffset = { x: 0, y: 0 };
-            console.log("No tiles with frames found, using origin");
-          }
+          initialOffset = getRandomTileOffset();
         }
         
         return initialOffset;
@@ -991,6 +998,20 @@ if (currentUser) {
           alert("Failed to place tile. Please try again.");
         }
       }
+
+      // Random button functionality
+      function randomizeLocation() {
+        const newOffset = getRandomTileOffset();
+        setOffset(newOffset);
+      }
+
+      // Add click handler for random button
+      const btnRandom = document.querySelector<HTMLButtonElement>("#btn-random");
+      if (btnRandom) {
+        btnRandom.addEventListener("click", () => {
+          randomizeLocation();
+        });
+      }
     </script>
 
     <script>
@@ -1016,6 +1037,8 @@ if (currentUser) {
           location.href = url.toString();
         });
       }
+
+
     </script>
 
     <script>
