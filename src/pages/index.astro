@@ -1122,7 +1122,7 @@ if (currentUser) {
           projectCheckboxes.innerHTML = "";
           
           if (data.projects.length === 0) {
-            projectCheckboxes.innerHTML = "<p>No projects found. You can still create a frame without selecting projects.</p>";
+            projectCheckboxes.innerHTML = "<p>No projects found. Make sure you've worked on your project for at least an hour!</p>";
           } else {
             data.projects.forEach(project => {
               const item = document.createElement("div");
