@@ -1,10 +1,9 @@
 import type { APIRoute } from "astro";
-import { createVerificationToken } from "../../lib/auth";
-import { getCurrentUserFromRequest } from "../../lib/api-auth";
+import { createAuthorshipToken, getUserFromRequest } from "../../lib/auth";
 
 export const POST: APIRoute = async ({ request }) => {
     try {
-        const user = await getCurrentUserFromRequest(request);
+        const user = await getUserFromRequest(request);
         
         if (!user) {
             return new Response(JSON.stringify({ error: "Not authenticated" }), {
@@ -13,7 +12,7 @@ export const POST: APIRoute = async ({ request }) => {
             });
         }
 
-        const verificationToken = createVerificationToken(user.slackId);
+        const verificationToken = createAuthorshipToken(user.slackId);
 
         return new Response(JSON.stringify({
             token: verificationToken,

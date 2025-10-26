@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
-import { validateInternalSecret } from "../../../lib/api-auth";
+import { validateInternalSecret } from "../../../lib/auth";
 import { validateRequestBody, InternalSecretSchema } from "../../../lib/api-schemas";
 import prisma from "../../../lib/prisma";
 import { Hackatime } from "../../../hackatime";

@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 
-import type { Frame, User, Tile } from "../../prisma/generated/client";
-import { getCurrentUserFromRequest } from "../../lib/api-auth";
+import type { Frame, User } from "../../prisma/generated/client";
+import { getUserFromRequest } from "../../lib/auth";
 import prisma from "../../lib/prisma";
 
 /**
@@ -41,7 +41,7 @@ export interface ApiMapResponse {
 }
 
 export const GET: APIRoute = async ({ request }) => {
-    const currentUser = await getCurrentUserFromRequest(request);
+    const currentUser = await getUserFromRequest(request);
 
     const tiles = await prisma.tile.findMany({
         where: { 

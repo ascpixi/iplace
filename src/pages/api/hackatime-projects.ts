@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { getCurrentUserFromRequest } from "../../lib/api-auth";
+import { getUserFromRequest } from "../../lib/auth";
 import { Hackatime } from "../../hackatime";
 import { BEGIN_DATE } from "../../config";
 
@@ -16,7 +16,7 @@ interface ApiHackatimeProject {
 
 export const POST: APIRoute = async ({ request }) => {
     try {
-        const user = await getCurrentUserFromRequest(request);
+        const user = await getUserFromRequest(request);
         
         if (!user) {
             return new Response(JSON.stringify({ error: "Not authenticated" }), {

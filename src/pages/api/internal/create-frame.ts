@@ -1,8 +1,7 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
-import { validateInternalSecret } from "../../../lib/api-auth";
 import { validateRequestBody, InternalSecretSchema } from "../../../lib/api-schemas";
-import { verifyVerificationToken } from "../../../lib/auth";
+import { verifyAuthorshipToken, validateInternalSecret } from "../../../lib/auth";
 import prisma from "../../../lib/prisma";
 
 // This endpoint is intended to be used from automation scripts (e.g. from Airtable).
@@ -25,11 +24,8 @@ export const POST: APIRoute = async ({ request }) => {
     if (authError)
       return authError;
 
-    // Verify the authorship token and get the Slack ID
-    let tokenPayload;
-    try {
-      tokenPayload = verifyVerificationToken(authorshipToken);
-    } catch (error) {
+    const tokenPayload = verifyAuthorshipToken(authorshipToken);
+    if (!tokenPayload) {
       return new Response(JSON.stringify({ error: "Invalid or expired authorship token" }), {
         status: 401,
         headers: { "Content-Type": "application/json" }
