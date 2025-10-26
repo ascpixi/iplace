@@ -515,14 +515,9 @@ if (currentUser) {
     ) }
 
     <div id="hover-tile"></div>
-    <script is:inline define:vars={{ currentUserId: currentUser?.id || null }}>
-      // Global variables passed from server
-      if (currentUserId) {
-        console.log("(ok) User authenticated:", currentUserId);
-      }
-    </script>
 		
     <script>
+      // Main canvas controller
       import { CANVAS_HEIGHT, CANVAS_WIDTH, TILE_SIZE } from "../config";
       import { assert, type Vector2 } from "../util";
       import type { ApiTile, ApiFrame, ApiMapResponse } from "./api/map";
@@ -840,15 +835,17 @@ if (currentUser) {
     </script>
 
     <script>
+      // Top-right modal minimize/maximize
       const overlay = document.querySelector<HTMLDivElement>("#notice-overlay")!;
       const control = document.querySelector<HTMLDivElement>("#notice-control")!;
-      control.addEventListener("click", (ev) => {
+      control.addEventListener("click", () => {
         overlay.classList.toggle("minimized");
         control.innerText = overlay.classList.contains("minimized") ? "[^]" : "[x]";
       });
     </script>
 
     <script>
+      // Login button controller
       const btnLogin = document.querySelector<HTMLButtonElement>("#btn-login");
       if (btnLogin) {
         btnLogin.addEventListener("click", () => {
@@ -864,7 +861,7 @@ if (currentUser) {
 
     <script>
       import { FRAME_CREATE_FORM_URL } from "../config";
-import { assert } from "../util";
+      import { assert } from "../util";
       import type { ApiHackatimeProjectsResponse } from "./api/hackatime-projects";
 
       const btnCreateFrame = document.querySelector<HTMLButtonElement>("#btn-create-frame");
