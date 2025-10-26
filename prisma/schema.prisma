@@ -72,6 +72,9 @@ model Frame {
   /// Comma-delimited list of Hackatime project names.
   projectNames      String
 
+  /// The time when this frame was created.
+  createdAt         DateTime      @default(now())
+
   tiles     Tile[]
 }
 

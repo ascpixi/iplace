@@ -50,10 +50,11 @@
       let pollInterval: ReturnType<typeof setInterval> | null = null;
       let pollAttempts = 0;
       const maxPollAttempts = 60; // 5 minutes (60 * 5 seconds)
+      const startTime = new Date().toISOString(); // Track when we started polling
 
       async function pollForFrameCompletion() {
         try {
-          const response = await fetch("/api/recent-frames");
+          const response = await fetch(`/api/recent-frames?since=${encodeURIComponent(startTime)}`);
 
           if (!response.ok) {
             if (response.status === 401) {

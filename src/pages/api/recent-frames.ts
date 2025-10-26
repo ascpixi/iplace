@@ -8,10 +8,20 @@ export const GET: APIRoute = async ({ request }) => {
     if (!user)
         return notAuthedResponse();
 
+    const url = new URL(request.url);
+    const sinceParam = url.searchParams.get('since');
+    
+    let whereClause: any = { ownerId: user.id };
+    
+    if (sinceParam) {
+        const sinceDate = new Date(sinceParam);
+        whereClause.createdAt = { gte: sinceDate };
+    }
+
     const recentFrames = await prisma.frame.findMany({
-        where: { ownerId: user.id },
-        orderBy: { id: "desc" },
-        take: 1
+        where: whereClause,
+        orderBy: { createdAt: "desc" },
+        take: sinceParam ? 10 : 1 // Return more frames when filtering by time
     });
 
     return jsonResponse({
@@ -19,7 +29,8 @@ export const GET: APIRoute = async ({ request }) => {
             id: frame.id,
             url: frame.url,
             isPending: frame.isPending,
-            projectNames: frame.projectNames
+            projectNames: frame.projectNames,
+            createdAt: frame.createdAt.toISOString()
         }))
     });
 };
