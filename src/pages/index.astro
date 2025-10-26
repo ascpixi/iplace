@@ -215,6 +215,37 @@ if (currentUser) {
       }
     }
 
+    .frame-item {
+      border: 2px solid #000;
+      padding: 0.8em;
+      margin: 0.5em 0;
+      background: #fff;
+      
+      .frame-info {
+        margin-bottom: 0.5em;
+        
+        strong {
+          color: #000;
+        }
+        
+        small {
+          color: #000;
+        }
+      }
+      
+      .btn-place-tile {
+        margin-top: 0.5em;
+        background: #fff;
+        color: #000;
+        border: 2px solid #000;
+        
+        &:hover {
+          background: #000;
+          color: #fff;
+        }
+      }
+    }
+
     #create-frame-modal, #project-selection-modal {
       position: fixed;
       top: 0;
@@ -393,6 +424,26 @@ if (currentUser) {
                 <summary>Your frames</summary>
                 <div class="content">
                   { userFrames.length == 0 && <p>You have no frames yet!</p> }
+                  
+                  { userFrames.map(frame => {
+                    const availableTiles = frame.isPending ? 0 : Math.max(0, Math.floor((frame.approvedTime || 0) / 3600) - frame.placedTiles);
+                    return (
+                      <div class="frame-item">
+                        <div class="frame-info">
+                          <strong>{frame.url}</strong>
+                          <br />
+                          <small>
+                            Available tiles: {availableTiles}{frame.isPending ? ' / Pending' : ''}
+                          </small>
+                        </div>
+                        {availableTiles > 0 && (
+                          <button class="btn-place-tile" data-frame-id={frame.id}>
+                            Place tile ({availableTiles} available)
+                          </button>
+                        )}
+                      </div>
+                    )
+                  }) }
 
                   <button id="btn-create-frame">Create new frame</button>
                 </div>
@@ -813,6 +864,7 @@ if (currentUser) {
 
     <script>
       import { FRAME_CREATE_FORM_URL } from "../config";
+import { assert } from "../util";
       import type { ApiHackatimeProjectsResponse } from "./api/hackatime-projects";
 
       const btnCreateFrame = document.querySelector<HTMLButtonElement>("#btn-create-frame");
@@ -848,22 +900,16 @@ if (currentUser) {
             params.set('hkp', selectedProjects.join(','));
           }
           
-          try {
-            const response = await fetch('/api/create-authorship-token', { method: 'POST' });
-            if (response.ok) {
-              const data = await response.json();
-              if (data.token) {
-                params.set('atk', data.token);
-              }
-            }
-          } catch (error) {
-            console.error('Failed to fetch authorship token:', error);
-          }
+          const response = await fetch('/api/create-authorship-token', { method: 'POST' });
+          assert(response.ok);
+
+          const data = await response.json();
+          params.set('atk', data.token);
+
+          console.log(`(debug) form query params: ${params.toString()}`);
           
-          if (params.toString()) {
-            url += `?${params.toString()}`;
-          }
-          
+          url += `?${params.toString()}`;
+
           createFrameIframe.src = url;
           createFrameModal.style.display = "block";
         }
