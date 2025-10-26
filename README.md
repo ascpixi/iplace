@@ -1,43 +1,7 @@
-# Astro Starter Kit: Minimal
+# Hack Club's `<iplace>`
+`<iplace>` is a public canvas of webpages embedded inside `<iframe>` elements, to which all teenagers can contribute! See it in action at [`iplace.hackclub.com`](https://iplace.hackclub.com)!
 
-```sh
-yarn create astro@latest -- --template minimal
-```
+## Deploying
+Use the `Dockerfile` to deploy `<iplace>`. Do note that the service you'll be using for frame creation forms needs to sync with the server via the `/api/internal` endpoints. See the [`etc/add-frame`](./etc/add-frame.mjs) and [`etc/approve.mjs`](./etc/approve.mjs) scripts to see how it's done.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
-
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
-
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `yarn install`             | Installs dependencies                            |
-| `yarn dev`             | Starts local dev server at `localhost:4321`      |
-| `yarn build`           | Build your production site to `./dist/`          |
-| `yarn preview`         | Preview your build locally, before deploying     |
-| `yarn astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `yarn astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+You'll also need a PostgreSQL database to use with Prisma. The Dockerfile will automatically set it up.
