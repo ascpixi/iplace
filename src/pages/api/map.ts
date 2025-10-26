@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 
-import type { Frame, Tile, User } from "../../prisma/generated/client";
+import type { Frame, User } from "../../prisma/generated/client";
 import prisma from "../../lib/prisma";
 import { jsonResponse } from "../../lib/api-util";
 import { getUserFromRequest } from "../../lib/auth";
@@ -43,28 +43,14 @@ export interface ApiMapResponse {
 
 export const GET: APIRoute = async ({ request }) => {
     const currentUser = await getUserFromRequest(request);
-    
-    let tiles: Tile[];
-    if (currentUser) {
-        tiles = await prisma.tile.findMany({
-            where: { 
-                frame: {
-                    OR: [
-                        { isPending: false },
-                        { 
-                            isPending: true, 
-                            ownerId: currentUser?.id 
-                        }
-                    ]
-                }
+
+    const tiles = await prisma.tile.findMany({
+        where: { 
+            frame: {
+                isPending: false 
             }
-        });
-    }
-    else {
-        tiles = await prisma.tile.findMany({
-            where: { frame: { isPending: false } }
-        });
-    }
+        }
+    });
 
     // Relation processing - we only expose the entities we actually process.
     const frames: Frame[] = [];
@@ -88,6 +74,17 @@ export const GET: APIRoute = async ({ request }) => {
             throw new Error(`Possible database integrity error! Frame ${frame.url} (${frame.id}) is authored by the non-existent user ${frame.ownerId}!`);
 
         authors.push(author);
+    }
+
+    // If we're logged in, also include unreferenced frames that have been created by the author.
+    if (currentUser) {
+        const userFrames = await prisma.frame.findMany({ where: { ownerId: currentUser.id } });
+        for (const frame of userFrames) {
+            if (frames.some(x => x.id == frame.id))
+                continue;
+
+            frames.push(frame);
+        }
     }
 
     const response: ApiMapResponse = {
