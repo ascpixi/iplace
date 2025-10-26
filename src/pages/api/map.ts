@@ -1,8 +1,9 @@
 import type { APIRoute } from "astro";
 
-import type { Frame, User } from "../../prisma/generated/client";
+import type { Frame, Tile, User } from "../../prisma/generated/client";
 import prisma from "../../lib/prisma";
 import { jsonResponse } from "../../lib/api-util";
+import { getUserFromRequest } from "../../lib/auth";
 
 /**
  * Represents a single tile. Corresponds to `db.Tile`.
@@ -41,13 +42,29 @@ export interface ApiMapResponse {
 }
 
 export const GET: APIRoute = async ({ request }) => {
-    const tiles = await prisma.tile.findMany({
-        where: { 
-            frame: {
-                isPending: false 
+    const currentUser = await getUserFromRequest(request);
+    
+    let tiles: Tile[];
+    if (currentUser) {
+        tiles = await prisma.tile.findMany({
+            where: { 
+                frame: {
+                    OR: [
+                        { isPending: false },
+                        { 
+                            isPending: true, 
+                            ownerId: currentUser?.id 
+                        }
+                    ]
+                }
             }
-        }
-    });
+        });
+    }
+    else {
+        tiles = await prisma.tile.findMany({
+            where: { frame: { isPending: false } }
+        });
+    }
 
     // Relation processing - we only expose the entities we actually process.
     const frames: Frame[] = [];
