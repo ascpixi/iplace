@@ -491,7 +491,7 @@ if (currentUser) {
           return; // no tile is present at the given location
 
         const frame = getFrameById(tile?.frame);
-        assert(frame != undefined);
+        assert(frame != undefined, `frame ID ${tile.frame} of (${tile.x}, ${tile.y}) is non-existent for updateTileAt`);
 
         ensureFrameLoaded(frame);
       }
@@ -521,7 +521,7 @@ if (currentUser) {
           if (y2 < tile.y) { y2 = tile.y; }
         }
         
-        assert(layoutCount != 0);
+        assert(layoutCount != 0, "ensureFrameLoaded called but no tiles belong to the frame");
         assert(x1 != Infinity && y1 != Infinity, `x1 = ${x1}, y1 = ${y1}`);
         assert(x2 != -Infinity && y2 != -Infinity, `x2 = ${x2}, y2 = ${y2}`);
 
@@ -1076,7 +1076,10 @@ if (currentUser) {
           }
           
           const response = await fetch('/api/create-authorship-token', { method: 'POST' });
-          assert(response.ok);
+          if (!response.ok) {
+            console.error("(openCreateFrameModal) /api/create-authorship-token failed!", response, await response.text());
+            throw new Error(`/api/create-authorship-token failed with HTTP ${response.status}`);
+          }
 
           const data = await response.json();
           params.set('atk', data.token);
