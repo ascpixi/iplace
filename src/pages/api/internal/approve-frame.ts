@@ -45,6 +45,7 @@ export const POST: APIRoute = async ({ request }) => {
         }
     }
 
+    console.log(`(/api/internal/approve-frame) approving frame ${frame.url} (ID ${frame.id})`);
     const updatedFrame = await prisma.frame.update({
         where: { id: frame.id },
         data: {

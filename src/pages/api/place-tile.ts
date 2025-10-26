@@ -67,6 +67,7 @@ export const POST: APIRoute = async ({ request }) => {
         }
     }
 
+    console.log(`(/api/place-tile) placing tile @ (${x}, ${y}) for ${frame.url}`);
     const [tile, updatedFrame] = await prisma.$transaction([
         prisma.tile.create({
             data: {

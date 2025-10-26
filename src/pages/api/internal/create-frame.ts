@@ -33,6 +33,7 @@ export const POST: APIRoute = async ({ request }) => {
     if (!owner)
         return jsonError(404, "User not found for the provided authorship token");
 
+    console.log(`(/api/internal/approve-frame) creating frame ${url} belonging o ${owner.name} (SID ${owner.slackId})`);
     const frame = await prisma.frame.create({
         data: {
             url,

@@ -21,7 +21,7 @@ export const GET: APIRoute = async (req) => {
     }).then(x => x.json());
 
     if (!tokenResponse.ok) {
-        console.error("(error) Slack authentication failed!", tokenResponse);
+        console.error("(/api/slack-callback) Slack authentication failed!", tokenResponse);
         return req.redirect("/?error=token-error");
     }
 
@@ -33,7 +33,7 @@ export const GET: APIRoute = async (req) => {
     }).then(x => x.json());
 
     if (!userResponse.ok) {
-        console.error("(error) Failed to fetch user identity!", userResponse);
+        console.error("(/api/slack-callback) Failed to fetch user identity!", userResponse);
         return req.redirect("/?error=user-error");
     }
 
@@ -59,7 +59,7 @@ export const GET: APIRoute = async (req) => {
                 profilePicture,
             },
         });
-        console.log("(ok) New user created:", user.id);
+        console.log("(/api/slack-callback) New user created:", user.id);
     } else {
         user = await prisma.user.update({
             where: { id: user.id },
@@ -68,11 +68,11 @@ export const GET: APIRoute = async (req) => {
                 profilePicture,
             },
         });
-        console.log("(ok) Existing user updated:", user.id);
+        console.log("(/api/slack-callback) Existing user updated:", user.id);
     }
 
     const sessionId = await createSession(user.id);
-    console.log("(ok) User session created:", user.id);
+    console.log("(/api/slack-callback) User session created:", user.id);
 
     const response = req.redirect("/");
     response.headers.set("Set-Cookie", `session=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${30 * 24 * 60 * 60}`); // 30 days
