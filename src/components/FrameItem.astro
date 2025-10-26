@@ -15,7 +15,7 @@ const { frameId, title, url, availableTiles, isPending = false } = Astro.props;
 <div class="frame-item">
   <div class="frame-info">
     <strong>{title}</strong><br />
-    <small>Available tiles: {availableTiles}{isPending ? ' / Pending' : ''}</small>
+    <small>{isPending ? 'Pending approval!' : `Available tiles: ${availableTiles}`}</small>
   </div>
   {availableTiles > 0 && (
     <Button 
