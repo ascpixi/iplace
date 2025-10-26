@@ -43,5 +43,5 @@ EXPOSE 4321
 ENV HOST=0.0.0.0
 ENV PORT=4321
 
-# Start the application
-CMD ["yarn", "preview"]
+# Start the Node.js server
+CMD ["node", "./dist/server/entry.mjs"]
