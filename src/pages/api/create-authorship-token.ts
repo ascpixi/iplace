@@ -1,16 +1,11 @@
 import type { APIRoute } from "astro";
-import { createAuthorshipToken, getUserFromRequest } from "../../lib/auth";
+import { createAuthorshipToken, getUserFromRequest, notAuthedResponse } from "../../lib/auth";
 
 export const POST: APIRoute = async ({ request }) => {
     try {
         const user = await getUserFromRequest(request);
-        
-        if (!user) {
-            return new Response(JSON.stringify({ error: "Not authenticated" }), {
-                status: 401,
-                headers: { "Content-Type": "application/json" }
-            });
-        }
+        if (!user)
+            return notAuthedResponse();
 
         const verificationToken = createAuthorshipToken(user.slackId);
 

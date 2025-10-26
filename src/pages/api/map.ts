@@ -41,8 +41,6 @@ export interface ApiMapResponse {
 }
 
 export const GET: APIRoute = async ({ request }) => {
-    const currentUser = await getUserFromRequest(request);
-
     const tiles = await prisma.tile.findMany({
         where: { 
             frame: {

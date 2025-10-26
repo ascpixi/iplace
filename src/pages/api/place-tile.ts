@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
-import { getUserFromRequest } from "../../lib/auth";
+import { getUserFromRequest, notAuthedResponse } from "../../lib/auth";
 import { validateRequestBody } from "../../lib/api-schemas";
 import prisma from "../../lib/prisma";
 
@@ -13,14 +13,9 @@ const PlaceTileSchema = z.object({
 export const POST: APIRoute = async ({ request }) => {
   try {
     const user = await getUserFromRequest(request);
-    
-    if (!user) {
-      return new Response(JSON.stringify({ error: "Not authenticated" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" }
-      });
-    }
-
+    if (!user)
+        return notAuthedResponse();
+      
     const validation = await validateRequestBody(request, PlaceTileSchema);
     if (!validation.success)
       return validation.response;

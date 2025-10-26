@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { getUserFromRequest } from "../../lib/auth";
+import { getUserFromRequest, notAuthedResponse } from "../../lib/auth";
 import { Hackatime } from "../../hackatime";
 import { BEGIN_DATE } from "../../config";
 
@@ -17,13 +17,8 @@ interface ApiHackatimeProject {
 export const POST: APIRoute = async ({ request }) => {
     try {
         const user = await getUserFromRequest(request);
-        
-        if (!user) {
-            return new Response(JSON.stringify({ error: "Not authenticated" }), {
-                status: 401,
-                headers: { "Content-Type": "application/json" }
-            });
-        }
+        if (!user)
+            return notAuthedResponse();
 
         const allProjects = await hackatime.getProjectsFor(user.slackId);
 

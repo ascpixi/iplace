@@ -1,22 +1,18 @@
 import type { APIRoute } from "astro";
 import { getCurrentUser } from "../../lib/server-auth";
 import prisma from "../../lib/prisma";
+import { notAuthedResponse } from "../../lib/auth";
 
 export const GET: APIRoute = async ({ request }) => {
   try {
-    const currentUser = await getCurrentUser({ request } as any);
-    
-    if (!currentUser) {
-      return new Response(JSON.stringify({ error: "Not authenticated" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" }
-      });
-    }
+    const user = await getCurrentUser({ request } as any);
+    if (!user)
+        return notAuthedResponse();
 
     // Get the most recent frame for this user
     const recentFrames = await prisma.frame.findMany({
       where: {
-        ownerId: currentUser.id
+        ownerId: user.id
       },
       orderBy: {
         id: 'desc'

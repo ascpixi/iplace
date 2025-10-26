@@ -70,6 +70,16 @@ export async function cleanExpiredSessions() {
   });
 }
 
+export function notAuthedResponse() {
+  return new Response(
+    JSON.stringify({ error: "Not authenticated" }),
+    {
+      status: 401,
+      headers: { "Content-Type": "application/json" }
+    }
+  );
+}
+
 export async function getUserFromRequest(request: Request): Promise<db.User | null> {
   const sessionCookie = request.headers.get("cookie")
     ?.split(";")
@@ -95,6 +105,6 @@ export function validateInternalSecret(secret: string | undefined): Response | n
       headers: { "Content-Type": "application/json" }
     });
   }
-  
+
   return null;
 }
