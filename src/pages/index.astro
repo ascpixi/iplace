@@ -318,6 +318,14 @@ if (currentUser) {
       let dragStart = { x: 0, y: 0 };
       let isDragging = false;
       let isShiftPressed = false;
+      
+      // Place mode variables
+      let isPlaceMode = false;
+      let clickStartPos: Vector2 | null = null;
+      let currentHoverTileX: number | null = null;
+      let currentHoverTileY: number | null = null;
+      let currentPlacingFrame: number | null = null;
+      let mapData: { tiles: Array<{x: number, y: number, frame: number}> } | null = null;
 
       const map: ApiMapResponse = await fetch("/api/map").then(x => x.json());
       console.log("(ok) map fetched!", map);
@@ -666,13 +674,6 @@ if (currentUser) {
       });
 
       const hoverTile = document.querySelector<HTMLDivElement>("#hover-tile")!;
-      
-      let isPlaceMode = false;
-      let clickStartPos: Vector2 | null = null;
-      let currentHoverTileX: number | null = null;
-      let currentHoverTileY: number | null = null;
-      let currentPlacingFrame: number | null = null;
-      let mapData: { tiles: Array<{x: number, y: number, frame: number}> } | null = null;
 
       function hideValidPlacementOverlays() {
         // Remove all existing valid placement overlays
@@ -815,27 +816,30 @@ if (currentUser) {
       }
 
       function isValidPlacement(x: number, y: number): boolean {
-        if (!currentPlacingFrame || !mapData) return true;
+        if (!currentPlacingFrame || !mapData)
+          return true;
         
-        // Check if position is already occupied
-        const existingTile = mapData.tiles.find(tile => tile.x === x && tile.y === y);
-        if (existingTile) return false;
-        
-        // Get existing tiles for current frame
         const frameTiles = mapData.tiles.filter(tile => tile.frame === currentPlacingFrame);
         
-        // First tile can be placed anywhere
-        if (frameTiles.length === 0) return true;
+        const existingTile = mapData.tiles.find(tile => tile.x === x && tile.y === y);
+        if (existingTile?.frame == currentPlacingFrame)
+          return false; // can't place a tile on top of another belonging to the same frame
+
+        // First tile can be placed anywhere that is not occupied.
+        if (frameTiles.length === 0) {
+          const existingTile = mapData.tiles.find(tile => tile.x === x && tile.y === y);
+          if (existingTile) {
+            return false;
+          }
+        }
         
-        // Subsequent tiles must be adjacent to existing tiles
+        // Subsequent tiles can be placed on occupied tiles, but must be adjacent to existing tiles.
         return frameTiles.some(tile => {
           const dx = Math.abs(tile.x - x);
           const dy = Math.abs(tile.y - y);
           return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
         });
       }
-
-
 
       function updateHoverTile(screenCoord: Vector2) {
         if (!isPlaceMode)
@@ -919,13 +923,12 @@ if (currentUser) {
 
       async function handlePlace(x: number, y: number) {
         if (!currentPlacingFrame) {
-          alert("No frame selected for placement");
+          alert("Select a frame first before placing!");
           return;
         }
 
-        // Only allow valid placements
         if (!isValidPlacement(x, y)) {
-          alert("Invalid placement position");
+          alert("Sorry, you can't place a tile there!");
           return;
         }
 

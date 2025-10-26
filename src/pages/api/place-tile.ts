@@ -38,20 +38,13 @@ export const POST: APIRoute = async ({ request }) => {
     if (!frame.approvedTime || frame.approvedTime - requiredTime < 0)
         return jsonError(400, "Insufficient approved time to place another tile");
 
-    const existingTile = await prisma.tile.findUnique({
-        where: { x_y: { x, y } }
-    });
-
-    if (existingTile)
-        return jsonError(409, "Position already occupied");
-
-    // Check if this is the first tile for this frame
     const existingFrameTiles = await prisma.tile.findMany({
         where: { frameId }
     });
 
-    // For non-first tiles, validate adjacency requirement
     if (existingFrameTiles.length > 0) {
+        // Subsequent tiles can "creep" into existing tiles, but can only be placed adjacent to existing
+        // tiles of the same frame.
         const isAdjacent = existingFrameTiles.some(tile => {
             const dx = Math.abs(tile.x - x);
             const dy = Math.abs(tile.y - y);
@@ -61,6 +54,16 @@ export const POST: APIRoute = async ({ request }) => {
 
         if (!isAdjacent) {
             return jsonError(400, "Tiles must be placed adjacent to existing tiles of the same frame");
+        }
+    }
+    else {
+        // Initial tiles cannot be placed on top of existing tiles.
+        const existingTile = await prisma.tile.findUnique({
+            where: { x_y: { x, y } }
+        });
+
+        if (existingTile) {
+            return jsonError(409, "Position already occupied");
         }
     }
 
