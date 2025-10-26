@@ -833,12 +833,8 @@ if (currentUser) {
           return false; // can't place a tile on top of another belonging to the same frame
 
         // First tile can be placed anywhere that is not occupied.
-        if (frameTiles.length === 0) {
-          const existingTile = mapData.tiles.find(tile => tile.x === x && tile.y === y);
-          if (existingTile) {
-            return false;
-          }
-        }
+        if (frameTiles.length === 0)
+          return existingTile == null;
         
         // Subsequent tiles can be placed on occupied tiles, but must be adjacent to existing tiles.
         return frameTiles.some(tile => {
