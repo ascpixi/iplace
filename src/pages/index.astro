@@ -5,6 +5,12 @@ import { getCurrentUser } from "../lib/server-auth";
 import prisma from "../lib/prisma";
 import type * as db from "../prisma/generated/client";
 
+import Button from "../components/Button.astro";
+import NoticeOverlay from "../components/NoticeOverlay.astro";
+import FrameItem from "../components/FrameItem.astro";
+import Details from "../components/Details.astro";
+import Modal from "../components/Modal.astro";
+
 const currentUser = await getCurrentUser(Astro);
 let userFrames: db.Frame[] = [];
 if (currentUser) {
@@ -64,6 +70,10 @@ if (currentUser) {
       background-size: 100px 100px;
     }
 
+    main.frame-nofocus iframe {
+      pointer-events: none;
+    }
+
     #hover-tile {
       position: absolute;
       width: 100px;
@@ -75,13 +85,22 @@ if (currentUser) {
       z-index: 5;
     }
 
-    .tile {
+    .valid-placement-overlay {
       position: absolute;
-      border: 1px solid #aaa;
-      border-bottom: none;
-      border-right: none;
       width: 100px;
       height: 100px;
+      background: rgba(0, 255, 0, 0.2);
+      border: 1px solid #00aa00;
+      pointer-events: none;
+      z-index: 4;
+    }
+
+    main iframe {
+      position: absolute;
+    }
+
+    iframe {
+      border: none;
     }
 
     body > * {
@@ -100,203 +119,41 @@ if (currentUser) {
       padding: 2em;
     }
 
-    #notice-overlay {
-      padding: 2em;
-      display: flex;
-      width: 100%;
-      height: 100%;
-      justify-content: flex-end;
-      z-index: 10;
-
-      & .notice {
-        width: 50%;
-        height: min-content;
-        display: flex;
-        flex-direction: column;
-        user-select: text;
-        cursor: default;
-        background: #fff;
-
-        & .titlebar {
-          padding: .5em 1em;
-          border: 2px solid black;
-          height: min-content;
-          display: flex;
-          justify-content: space-between;
-
-          #notice-control {
-            cursor: pointer;
-          }
-        }
-
-        & .content {
-          padding: 1em;
-          border: 2px solid black;
-          border-top: none;
-          height: min-content;
-          width: 100%;
-
-          display: flex;
-          flex-direction: column;
-          gap: 1em;
-        }
-      }
-
-      &.minimized {
-        & .notice {
-          width: 25%;
-          transition: width .25s;
-
-          &:hover {
-            opacity: 1;
-            width: 50%;
-          }
-
-          & .content {
-            display: none;
-          }
-        }
-      }
-    }
-
-    button {
-      display: block;
-      background: #fff;
-      border: 2px solid #000;
-      font-size: 1em;
-      padding: .5em 1em;
-      width: 100%;
-      transition: color .25s, background .25s;
-      cursor: pointer;
-      
-      &:hover:not(:disabled) {
-        background: #000;
-        color: #fff;
-      }
-
-      &:disabled {
-        background: #f5f5f5;
-        color: #999;
-        border-color: #ccc;
-        cursor: not-allowed;
-      }
-    }
-
     .buttons {
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
 
-    details {
-      &[open] {
-        summary {
-          &::marker {
-            content: "[v] ";
-          }
-        }
-      }
-
-      summary {
-        border: 2px solid black;
-        padding: .5em 1em;
-        cursor: pointer;
-
-        transition: background .25s, color .25s;
-        &:hover {
-          background: #000;
-          color: #fff;
-        }
-
-        &::marker {
-          margin-right: 32px;
-          content: "[>] ";
-        }
-      }
+    /* Project selection modal specific styling */
+    #project-selection-modal .modal-content {
+      padding: 4em;
     }
 
-    .frame-item {
-      border: 2px solid #000;
-      padding: 0.8em;
+    .modal-loading {
+      text-align: center;
+      padding: 2em;
+    }
+
+    .modal-error {
+      display: none;
+      text-align: center;
+      padding: 2em;
+    }
+
+    .project-instruction {
+      margin-bottom: 1em;
+    }
+
+    .modal-buttons {
+      margin-top: 1em;
+    }
+
+    .selection-hint {
+      font-size: 0.9em;
+      color: #666;
+      text-align: center;
       margin: 0.5em 0;
-      background: #fff;
-      
-      .frame-info {
-        margin-bottom: 0.5em;
-        
-        strong {
-          color: #000;
-        }
-        
-        small {
-          color: #000;
-        }
-      }
-      
-      .btn-place-tile {
-        margin-top: 0.5em;
-        background: #fff;
-        color: #000;
-        border: 2px solid #000;
-        
-        &:hover {
-          background: #000;
-          color: #fff;
-        }
-      }
-    }
-
-    #create-frame-modal, #project-selection-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 20;
-
-      .modal-backdrop {
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 2em;
-      }
-
-      .modal-window {
-        width: 90%;
-        height: 90%;
-        max-width: 900px;
-        max-height: 900px;
-        background: #fff;
-        display: flex;
-        flex-direction: column;
-        
-        .titlebar {
-          padding: .5em 1em;
-          border: 2px solid black;
-          height: min-content;
-          display: flex;
-          justify-content: space-between;
-
-          #modal-close {
-            cursor: pointer;
-          }
-        }
-
-        .modal-content {
-          flex: 1;
-          border: 2px solid black;
-          border-top: none;
-          overflow: hidden;
-
-          iframe {
-            border: none;
-            display: block;
-          }
-        }
-      }
     }
 
     .project-checkboxes {
@@ -366,35 +223,6 @@ if (currentUser) {
       display: none;
     }
 
-    .modal-loading {
-      text-align: center;
-      padding: 2em;
-    }
-
-    .modal-error {
-      display: none;
-      text-align: center;
-      padding: 2em;
-    }
-
-    .project-instruction {
-      margin-bottom: 1em;
-    }
-
-    .modal-buttons {
-      margin-top: 1em;
-    }
-
-    .selection-hint {
-      font-size: 0.9em;
-      color: #666;
-      text-align: center;
-      margin: 0.5em 0;
-    }
-
-    #project-selection-modal .modal-content {
-      padding: 4em;
-    }
   </style>
 
 	<body>
@@ -405,113 +233,70 @@ if (currentUser) {
       }}
     />
 
-    <div id="notice-overlay">
-      <div class="notice">
-        <div class="titlebar">
-          <div>Hack Club's <b>&lt;iplace&gt;</b></div>
-          <div role="button" title="Minimize" id="notice-control">[x]</div>
-        </div>
+    <NoticeOverlay id="notice-overlay">
+      <span slot="title">Hack Club's <b>&lt;iplace&gt;</b></span>
+      
+      <p>
+        This is a public canvas of <b>&lt;iframe&gt;</b> elements. Each hour of coding allows you to
+        place one 100x100px tile and gives you <b>$5</b> in hosting credit!
+      </p>
 
-        <div class="content">
-          <p>
-            This is a public canvas of <b>&lt;iframe&gt;</b> elements. Each hour of coding allows you to
-            place one 100x100px tile and gives you <b>$5</b> in hosting credit!
-          </p>
-
-          { currentUser ? (
-            <div class="buttons">
-              <details>
-                <summary>Your frames</summary>
-                <div class="content">
-                  { userFrames.length == 0 && <p>You have no frames yet!</p> }
-                  
-                  { userFrames.map(frame => {
-                    const availableTiles = frame.isPending ? 0 : Math.max(0, Math.floor((frame.approvedTime || 0) / 3600) - frame.placedTiles);
-                    return (
-                      <div class="frame-item">
-                        <div class="frame-info">
-                          <strong>{frame.url}</strong>
-                          <br />
-                          <small>
-                            Available tiles: {availableTiles}{frame.isPending ? ' / Pending' : ''}
-                          </small>
-                        </div>
-                        {availableTiles > 0 && (
-                          <button class="btn-place-tile" data-frame-id={frame.id}>
-                            Place tile ({availableTiles} available)
-                          </button>
-                        )}
-                      </div>
-                    )
-                  }) }
-
-                  <button id="btn-create-frame">Create new frame</button>
-                </div>
-              </details>
-
-              <button id="btn-place">Place a frame</button>
+      { currentUser ? (
+        <div class="buttons">
+          <Details summary="Your frames">
+            <div class="content">
+              { userFrames.length == 0 && <p>You have no frames yet!</p> }
+              
+              { userFrames.map(frame => {
+                const availableTiles = frame.isPending ? 0 : Math.max(0, Math.floor((frame.approvedTime || 0) / 3600) - frame.placedTiles);
+                return (
+                  <FrameItem 
+                    frameId={frame.id}
+                    title={frame.url}
+                    url={frame.url}
+                    availableTiles={availableTiles}
+                    isPending={frame.isPending}
+                  />
+                )
+              }) }
+              
+              <Button id="btn-create-frame">Create a frame</Button>
             </div>
-          ) : (
-            <div class="buttons">
-              <button id="btn-login">Log in with Hack Club's Slack</button>
-            </div>
-          ) }
+          </Details>
         </div>
-      </div>
-    </div>
-
-    <div id="edit-layer">
-
-    </div>
+      ) : (
+        <div class="buttons">
+          <Button id="btn-login">Log in with Hack Club's Slack</Button>
+        </div>
+      ) }
+    </NoticeOverlay>
 
     { currentUser && (
-      <div id="create-frame-modal" style="display: none;">
-        <div class="modal-backdrop">
-          <div class="modal-window">
-            <div class="titlebar">
-              <div>Create frame</div>
-              <div role="button" title="Close" id="modal-close">[x]</div>
-            </div>
-            <div class="modal-content">
-              <iframe id="create-frame-iframe" sandbox="allow-same-origin allow-scripts allow-forms" width="100%" height="100%"></iframe>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Modal id="create-frame-modal" title="Create frame" closeButtonId="modal-close" hidden>
+        <iframe id="create-frame-iframe" sandbox="allow-same-origin allow-scripts allow-forms" width="100%" height="100%"></iframe>
+      </Modal>
     ) }
 
     { currentUser && (
-      <div id="project-selection-modal" class="modal-hidden">
-        <div class="modal-backdrop">
-          <div class="modal-window">
-            <div class="titlebar">
-              <div>Select Hackatime Projects</div>
-              <div role="button" title="Close" id="project-modal-close">[x]</div>
-            </div>
-            <div class="modal-content">
-              <div id="project-loading" class="modal-loading">
-                Loading projects...
-              </div>
-              <div id="project-list" class="modal-hidden">
-                <p class="project-instruction"><strong>Select at least one project</strong> to associate with this frame:</p>
-                <div id="project-checkboxes" class="project-checkboxes">
-                  <!-- Projects will be populated here -->
-                </div>
-                <div class="buttons modal-buttons">
-                  <button id="continue-with-projects" disabled>Continue</button>
-                  <p id="selection-hint" class="selection-hint">Please select at least one project to continue</p>
-                </div>
-              </div>
-              <div id="project-error" class="modal-error">
-                <p>Failed to load projects. You can continue without selecting projects.</p>
-                <div class="buttons modal-buttons">
-                  <button id="continue-without-projects">Continue anyway</button>
-                </div>
-              </div>
-            </div>
+      <Modal id="project-selection-modal" title="Select Hackatime Projects" closeButtonId="project-modal-close" class="modal-hidden">
+        <div id="project-loading" class="modal-loading">
+          Loading projects...
+        </div>
+        <div id="project-list" class="modal-hidden">
+          <p class="project-instruction"><strong>Select at least one project</strong> to associate with this frame:</p>
+          <div id="project-checkboxes" class="project-checkboxes"></div>
+          <div class="buttons modal-buttons">
+            <Button id="continue-with-projects" disabled>Continue</Button>
+            <p id="selection-hint" class="selection-hint">Please select at least one project to continue</p>
           </div>
         </div>
-      </div>
+        <div id="project-error" class="modal-error">
+          <p>Failed to load projects. You can continue without selecting projects.</p>
+          <div class="buttons modal-buttons">
+            <Button id="continue-without-projects">Continue anyway</Button>
+          </div>
+        </div>
+      </Modal>
     ) }
 
     <div id="hover-tile"></div>
@@ -528,6 +313,7 @@ if (currentUser) {
       let offset = { x: 0, y: 0 };
       let dragStart = { x: 0, y: 0 };
       let isDragging = false;
+      let isShiftPressed = false;
 
       const map: ApiMapResponse = await fetch("/api/map").then(x => x.json());
       console.log("(ok) map fetched!", map);
@@ -544,6 +330,76 @@ if (currentUser) {
 
       const loadedFrameIds = new Set<number>();
 
+      // Hash update throttling
+      let hashUpdateTimeout: ReturnType<typeof setTimeout> | null = null;
+      function updateHashThrottled(offset: Vector2) {
+        if (hashUpdateTimeout !== null) {
+          clearTimeout(hashUpdateTimeout);
+        }
+        
+        hashUpdateTimeout = setTimeout(() => {
+          // Negate coordinates for hash-space (positive values represent movement right/down)
+          const hashX = Math.round(-offset.x);
+          const hashY = Math.round(-offset.y);
+          const newHash = `${hashX},${hashY}`;
+          
+          if (window.location.hash !== `#${newHash}`) {
+            window.location.replace(`${window.location.pathname}${window.location.search}#${newHash}`);
+          }
+          hashUpdateTimeout = null;
+        }, 500);
+      }
+
+      // Initialize offset from hash or random coordinates
+      function initializeOffset() {
+        const hash = window.location.hash.substring(1); // Remove the '#'
+        let initialOffset = { x: 0, y: 0 };
+        
+        if (hash && hash.includes(',')) {
+          // Parse coordinates from hash like "100,200" and negate for screen-space
+          const [hashX, hashY] = hash.split(',').map(coord => parseInt(coord.trim()));
+          if (!isNaN(hashX) && !isNaN(hashY)) {
+            initialOffset = { x: -hashX, y: -hashY };
+            console.log("Using coordinates from hash:", { hashX, hashY }, "converted to offset:", initialOffset);
+          }
+        }
+        
+        if (initialOffset.x === 0 && initialOffset.y === 0) {
+          // Pick a random tile that has a frame
+          const tilesWithFrames = map.tiles.filter(tile => {
+            const frame = map.frames.find(f => f.id === tile.frame);
+            return frame !== undefined;
+          });
+          
+          if (tilesWithFrames.length > 0) {
+            const randomTile = tilesWithFrames[Math.floor(Math.random() * tilesWithFrames.length)];
+            // Convert tile coordinates to screen-space offset (center the view on this tile)
+            const tileScreenX = randomTile.x * TILE_SIZE;
+            const tileScreenY = randomTile.y * TILE_SIZE;
+            
+            // Center the viewport on this tile by offsetting to bring it to center
+            const viewportCenterX = window.innerWidth / 2;
+            const viewportCenterY = window.innerHeight / 2;
+            
+            initialOffset = {
+              x: viewportCenterX - tileScreenX,
+              y: viewportCenterY - tileScreenY
+            };
+            console.log("Using random tile:", randomTile, "converted to offset:", initialOffset);
+          } else {
+            // Fallback if no tiles with frames exist
+            initialOffset = { x: 0, y: 0 };
+            console.log("No tiles with frames found, using origin");
+          }
+        }
+        
+        return initialOffset;
+      }
+
+      // Set initial offset and load frames
+      const initialOffset = initializeOffset();
+      setOffset(initialOffset);
+
       /**
        * Converts a screen-space coordinate to a tile-space one.
        */
@@ -557,6 +413,9 @@ if (currentUser) {
       async function setOffset(value: Vector2) {
         offset = value;
         main.style.transform = `translate(${offset.x}px, ${offset.y}px)`;
+        
+        // Update hash with current coordinates (throttled)
+        updateHashThrottled(offset);
 
         const tlTile = screenToTile(value);
         const brTile = screenToTile({
@@ -578,11 +437,30 @@ if (currentUser) {
             updateTileAt(x, y);
           }
         }
+
+        // Update placement overlays if in place mode
+        if (isPlaceMode) {
+          showValidPlacementOverlays();
+        }
       }
 
       function setIsDragging(value: boolean) {
         isDragging = value;
-        body.style.cursor = value ? "grabbing" : "grab";
+        updateCursor();
+      }
+
+      function updateCursor() {
+        // Update cursor based on state
+        if (isDragging) {
+          body.style.cursor = "grabbing";
+        } else if (isShiftPressed) {
+          body.style.cursor = "grab";
+        } else {
+          body.style.cursor = "default";
+        }
+        
+        // Apply frame-nofocus class when shift is held (panning mode) or in place mode
+        main.classList.toggle("frame-nofocus", isShiftPressed || isPlaceMode);
       }
 
       /**
@@ -628,8 +506,8 @@ if (currentUser) {
         assert(x1 != Infinity && y1 != Infinity, `x1 = ${x1}, y1 = ${y1}`);
         assert(x2 != -Infinity && y2 != -Infinity, `x2 = ${x2}, y2 = ${y2}`);
 
-        const width = x2 - x1;
-        const height = y2 - y1;
+        const width = (x2 - x1) + 1;
+        const height = (y2 - y1) + 1;
 
         // Now that we computed the width/height, let's check if the layout points form a rectangle.
         // If so, we can skip masking (since this iframe would cover the entire bounding rectangle)
@@ -652,9 +530,8 @@ if (currentUser) {
           }
         }
 
-        const iframe = new HTMLIFrameElement();
+        const iframe = document.createElement("iframe");
         iframe.src = frame.url;
-        iframe.loading = "lazy";
         iframe.sandbox = "allow-same-origin allow-scripts";
         iframe.width = `${width * TILE_SIZE}`;
         iframe.height = `${height * TILE_SIZE}`;
@@ -662,7 +539,6 @@ if (currentUser) {
         iframe.style.top = `${y1 * TILE_SIZE}px`;
         iframe.allow = "accelerometer; cross-origin-isolated; gyroscope; magnetometer; encrypted-media";
         iframe.dataset.id = `${frame.id}`;
-        iframe.className = "tile";
 
         // We might not need a mask - if this is a filled rect, then we can skip this step.
         if (needsMask) {
@@ -675,7 +551,7 @@ if (currentUser) {
             assert(tile.x >= x1 && tile.y >= y1, `x1 = ${x1}, tile.x = ${tile.x}, y1 = ${y1}, tile.y = ${tile.y}`);
             assert(tile.x <= x2 && tile.y <= y2, `x2 = ${x2}, tile.x = ${tile.x}, y2 = ${y2}, tile.y = ${tile.y}`);
 
-            mask += `<rect width="${TILE_SIZE}" height="${TILE_SIZE}" x="${(tile.x - x1) * TILE_SIZE}" y="${(tile.y - y1) * TILE_SIZE}" />`;
+            mask += `<rect width="${TILE_SIZE}" height="${TILE_SIZE}" x="${(tile.x - x1) * TILE_SIZE}" y="${(tile.y - y1) * TILE_SIZE}" fill="#fff" />`;
           }
 
           mask += "</svg>";
@@ -690,12 +566,32 @@ if (currentUser) {
         console.log("(ensureFrameLoaded) iframe created:", iframe);
       }
 
+      function refreshFrame(frameId: number) {
+        // Remove existing iframe for this frame
+        const existingIframe = document.querySelector(`iframe[data-id="${frameId}"]`);
+        if (existingIframe) {
+          existingIframe.remove();
+        }
+        
+        // Remove from loaded frames set so it can be recreated
+        loadedFrameIds.delete(frameId);
+        
+        // Find the frame data and reload it
+        const frame = map.frames.find(f => f.id === frameId);
+        if (frame) {
+          ensureFrameLoaded(frame);
+        }
+      }
+
       body.addEventListener("mousedown", (ev) => {
-        setIsDragging(true);
-        dragStart = {
-          x: ev.clientX - offset.x,
-          y: ev.clientY - offset.y
-        };
+        // Only start dragging if Shift key is held down
+        if (ev.shiftKey) {
+          setIsDragging(true);
+          dragStart = {
+            x: ev.clientX - offset.x,
+            y: ev.clientY - offset.y
+          };
+        }
 
         if (isPlaceMode) {
           clickStartPos = { x: ev.clientX, y: ev.clientY };
@@ -713,7 +609,9 @@ if (currentUser) {
       });
 
       body.addEventListener("mouseup", (ev) => {
-        setIsDragging(false);
+        if (isDragging) {
+          setIsDragging(false);
+        }
       });
 
       body.addEventListener("touchstart", (ev) => {
@@ -744,27 +642,196 @@ if (currentUser) {
         setIsDragging(false);
       });
 
-      const btnPlace = document.querySelector<HTMLButtonElement>("#btn-place");
+      // Track shift key state for drag mode
+      document.addEventListener("keydown", (ev) => {
+        if (ev.key === "Shift" && !isShiftPressed) {
+          isShiftPressed = true;
+          updateCursor();
+        }
+      });
+
+      document.addEventListener("keyup", (ev) => {
+        if (ev.key === "Shift" && isShiftPressed) {
+          isShiftPressed = false;
+          updateCursor();
+          // If we were dragging and shift is released, stop dragging
+          if (isDragging) {
+            setIsDragging(false);
+          }
+        }
+      });
+
       const hoverTile = document.querySelector<HTMLDivElement>("#hover-tile")!;
       
       let isPlaceMode = false;
       let clickStartPos: Vector2 | null = null;
       let currentHoverTileX: number | null = null;
       let currentHoverTileY: number | null = null;
+      let currentPlacingFrame: number | null = null;
+      let mapData: { tiles: Array<{x: number, y: number, frame: number}> } | null = null;
 
-      function setPlaceMode(value: boolean) {
+      function hideValidPlacementOverlays() {
+        // Remove all existing valid placement overlays
+        const overlays = document.querySelectorAll('[data-valid-overlay]');
+        overlays.forEach(overlay => overlay.remove());
+      }
+
+      function showValidPlacementOverlays() {
+        if (!currentPlacingFrame || !mapData) return;
+        
+        // Hide existing overlays first
+        hideValidPlacementOverlays();
+        
+        // Get existing tiles for current frame
+        const frameTiles = mapData.tiles.filter(tile => tile.frame === currentPlacingFrame);
+        
+        // For first tile, don't show overlays (can be placed anywhere)
+        if (frameTiles.length === 0) return;
+        
+        // Find all adjacent positions to existing tiles
+        const validPositions = new Set<string>();
+        
+        frameTiles.forEach(tile => {
+          // Check all 4 adjacent positions
+          const adjacentPositions = [
+            { x: tile.x + 1, y: tile.y },
+            { x: tile.x - 1, y: tile.y },
+            { x: tile.x, y: tile.y + 1 },
+            { x: tile.x, y: tile.y - 1 }
+          ];
+          
+          adjacentPositions.forEach(pos => {
+            // Check if position is valid and not occupied
+            if (isValidPlacement(pos.x, pos.y)) {
+              validPositions.add(`${pos.x},${pos.y}`);
+            }
+          });
+        });
+        
+        // Create overlay elements for valid positions
+        validPositions.forEach(posKey => {
+          const [x, y] = posKey.split(',').map(Number);
+          
+          // Apply the same bounds checking as hover tile
+          if (x < 0 || x >= CANVAS_WIDTH || y < 0 || y >= CANVAS_HEIGHT) {
+            return;
+          }
+          
+          const overlay = document.createElement('div');
+          overlay.className = 'valid-placement-overlay';
+          // Position relative to the main element (which is already transformed)
+          overlay.style.left = `${x * TILE_SIZE}px`;
+          overlay.style.top = `${y * TILE_SIZE}px`;
+          overlay.setAttribute('data-valid-overlay', '');
+          main.appendChild(overlay);
+        });
+      }
+
+      async function setPlaceMode(value: boolean, frameId?: number) {
         isPlaceMode = value;
+        currentPlacingFrame = value ? (frameId || null) : null;
         main.classList.toggle("place-mode", value);
         hoverTile.style.display = value ? "block" : "none";
-        
-        if (btnPlace) {
-          btnPlace.textContent = value ? "Exit place mode" : "Place a frame";
-        }
+
+        // Update cursor and frame-nofocus class
+        updateCursor();
 
         if (!value) {
           hoverTile.style.display = "none";
+          hideValidPlacementOverlays();
         }
+
+        // Load map data when entering place mode
+        if (value && !mapData) {
+          try {
+            const response = await fetch("/api/map");
+            mapData = await response.json();
+            showValidPlacementOverlays();
+          } catch (error) {
+            console.error("Failed to load map data:", error);
+          }
+        } else if (value) {
+          showValidPlacementOverlays();
+        }
+
+        // Update button text for all place tile buttons
+        updatePlaceTileButtonTexts();
       }
+
+      function updatePlaceTileButtonTexts() {
+        const buttons = document.querySelectorAll<HTMLButtonElement>('.btn-place-tile');
+        buttons.forEach(button => {
+          const frameId = parseInt(button.getAttribute("data-frame-id") || "0");
+          if (isPlaceMode && currentPlacingFrame === frameId) {
+            button.textContent = "Exit place mode";
+          } else {
+            // Get available tiles count from data attribute if available
+            const originalText = button.getAttribute("data-original-text");
+            if (originalText) {
+              button.textContent = originalText;
+            }
+          }
+        });
+      }
+
+      function updateFrameTileCounts(frameId: number, remainingTime: number) {
+        // Calculate new available tile count
+        const newAvailableTiles = Math.max(0, Math.floor(remainingTime / 3600));
+        
+        // Find and update the frame info text
+        const frameItems = document.querySelectorAll('.frame-item');
+        frameItems.forEach(item => {
+          const button = item.querySelector('.btn-place-tile') as HTMLButtonElement;
+          if (button && parseInt(button.getAttribute('data-frame-id') || '0') === frameId) {
+            // Update the "Available tiles: X" text
+            const frameInfo = item.querySelector('.frame-info small');
+            if (frameInfo) {
+              frameInfo.textContent = `Available tiles: ${newAvailableTiles}`;
+            }
+            
+            // Update button text and visibility
+            if (newAvailableTiles > 0) {
+              const newButtonText = `Place tile (${newAvailableTiles} available)`;
+              button.setAttribute('data-original-text', newButtonText);
+              
+              // Update button text if not currently in place mode for this frame
+              if (!(isPlaceMode && currentPlacingFrame === frameId)) {
+                button.textContent = newButtonText;
+              }
+              button.style.display = 'block';
+            } else {
+              // Hide button if no tiles available
+              button.style.display = 'none';
+            }
+          }
+        });
+        
+        // Update button texts after the count change
+        updatePlaceTileButtonTexts();
+      }
+
+      function isValidPlacement(x: number, y: number): boolean {
+        if (!currentPlacingFrame || !mapData) return true;
+        
+        // Check if position is already occupied
+        const existingTile = mapData.tiles.find(tile => tile.x === x && tile.y === y);
+        if (existingTile) return false;
+        
+        // Get existing tiles for current frame
+        const frameTiles = mapData.tiles.filter(tile => tile.frame === currentPlacingFrame);
+        
+        // First tile can be placed anywhere
+        if (frameTiles.length === 0) return true;
+        
+        // Subsequent tiles must be adjacent to existing tiles
+        return frameTiles.some(tile => {
+          const dx = Math.abs(tile.x - x);
+          const dy = Math.abs(tile.y - y);
+          return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
+        });
+      }
+
+
 
       function updateHoverTile(screenCoord: Vector2) {
         if (!isPlaceMode)
@@ -787,15 +854,32 @@ if (currentUser) {
         hoverTile.style.top = `${(tileY * TILE_SIZE) + offset.y}px`;
         hoverTile.style.display = "block";
 
+        // Update hover tile color based on validity
+        const isValid = isValidPlacement(tileX, tileY);
+        hoverTile.style.background = isValid ? "rgba(0, 255, 0, 0.3)" : "rgba(255, 0, 0, 0.3)";
+        hoverTile.style.borderColor = isValid ? "#00aa00" : "#aa0000";
+
         currentHoverTileX = tileX;
         currentHoverTileY = tileY;
       }
 
-      if (btnPlace) {
-        btnPlace.addEventListener("click", () => {
-          setPlaceMode(!isPlaceMode);
-        });
-      }
+
+
+      // Add event listeners for place tile buttons
+      document.addEventListener("click", (ev) => {
+        const target = ev.target as Element;
+        if (target && target.classList.contains("btn-place-tile")) {
+          const frameId = parseInt(target.getAttribute("data-frame-id") || "0");
+          if (frameId > 0) {
+            // Toggle place mode for this frame
+            if (isPlaceMode && currentPlacingFrame === frameId) {
+              setPlaceMode(false);
+            } else {
+              setPlaceMode(true, frameId);
+            }
+          }
+        }
+      });
 
       // Override existing mousemove handler to include place mode
       body.addEventListener("mousemove", (ev) => {
@@ -829,8 +913,76 @@ if (currentUser) {
         }
       });
 
-      function handlePlace(x: number, y: number) {
-        alert(`Tile coordinates: (${x}, ${y})`);
+      async function handlePlace(x: number, y: number) {
+        if (!currentPlacingFrame) {
+          alert("No frame selected for placement");
+          return;
+        }
+
+        // Only allow valid placements
+        if (!isValidPlacement(x, y)) {
+          alert("Invalid placement position");
+          return;
+        }
+
+        try {
+          const response = await fetch("/api/place-tile", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              x,
+              y,
+              frameId: currentPlacingFrame
+            })
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            console.log("Tile placed successfully:", result);
+            
+            // Update local map data
+            if (mapData) {
+              mapData.tiles.push({ x, y, frame: currentPlacingFrame! });
+            }
+            
+            // Also update the main map tiles array that ensureFrameLoaded uses
+            const newTile = { x, y, frame: currentPlacingFrame! };
+            map.tiles.push(newTile);
+            
+            // Update the tiles lookup array used by getTileByCoord
+            tiles[x + (y * CANVAS_WIDTH)] = newTile;
+            
+            // Update the tile immediately
+            updateTileAt(x, y);
+            
+            // Refresh the frame to recalculate dimensions and mask
+            refreshFrame(currentPlacingFrame!);
+            
+            // Update available tile counts in the UI
+            updateFrameTileCounts(currentPlacingFrame!, result.frame?.remainingTime || 0);
+            
+            // Update overlays for the new placement
+            showValidPlacementOverlays();
+            
+            // Check if more tiles are available, only exit place mode if no more tiles can be placed
+            const remainingTime = result.frame?.remainingTime || 0;
+            const canPlaceMore = remainingTime >= 3600; // Each tile requires 1 hour (3600 seconds)
+            
+            if (!canPlaceMore) {
+              // Exit place mode if no more tiles can be placed
+              setPlaceMode(false);
+            }
+            // If more tiles can be placed, stay in place mode
+          } else {
+            const error = await response.json();
+            alert(`Error placing tile: ${error.message || "Unknown error"}`);
+          }
+        } catch (error) {
+          console.error("Error placing tile:", error);
+          alert("Failed to place tile. Please try again.");
+        }
       }
     </script>
 
@@ -864,7 +1016,7 @@ if (currentUser) {
       import { assert } from "../util";
       import type { ApiHackatimeProjectsResponse } from "./api/hackatime-projects";
 
-      const btnCreateFrame = document.querySelector<HTMLButtonElement>("#btn-create-frame");
+
       const createFrameModal = document.querySelector<HTMLDivElement>("#create-frame-modal");
       const createFrameIframe = document.querySelector<HTMLIFrameElement>("#create-frame-iframe");
       const modalClose = document.querySelector<HTMLDivElement>("#modal-close");
@@ -992,12 +1144,18 @@ if (currentUser) {
         }
       }
 
-      if (btnCreateFrame && projectSelectionModal) {
+      // Create frame button controller
+      const btnCreateFrame = document.querySelector<HTMLButtonElement>("#btn-create-frame");
+      if (btnCreateFrame) {
         btnCreateFrame.addEventListener("click", () => {
-          projectSelectionModal.classList.remove("modal-hidden");
-          loadProjects();
+          if (projectSelectionModal) {
+            projectSelectionModal.classList.remove("modal-hidden");
+            loadProjects();
+          }
         });
       }
+
+
 
       if (projectModalClose) {
         projectModalClose.addEventListener("click", closeProjectSelectionModal);

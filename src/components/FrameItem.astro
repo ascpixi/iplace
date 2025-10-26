@@ -1,0 +1,51 @@
+---
+import Button from './Button.astro';
+
+export interface Props {
+  frameId: number;
+  title: string;
+  url: string;
+  availableTiles: number;
+  isPending?: boolean;
+}
+
+const { frameId, title, url, availableTiles, isPending = false } = Astro.props;
+---
+
+<div class="frame-item">
+  <div class="frame-info">
+    <strong>{title}</strong><br />
+    <small>URL: {url}</small><br />
+    <small>Available tiles: {availableTiles}{isPending ? ' / Pending' : ''}</small>
+  </div>
+  {availableTiles > 0 && (
+    <Button 
+      class="btn-place-tile" 
+      data-frame-id={frameId.toString()}
+      data-original-text={`Place tile (${availableTiles} available)`}
+    >
+      Place tile ({availableTiles} available)
+    </Button>
+  )}
+</div>
+
+<style>
+  .frame-item {
+    border: 2px solid #000;
+    padding: 0.8em;
+    margin: 0.5em 0;
+    background: #fff;
+    
+    .frame-info {
+      margin-bottom: 0.5em;
+      
+      strong {
+        color: #000;
+      }
+      
+      small {
+        color: #000;
+      }
+    }
+  }
+</style>

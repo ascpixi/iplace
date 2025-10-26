@@ -1,0 +1,83 @@
+---
+export interface Props {
+  id?: string;
+  minimized?: boolean;
+}
+
+const { id = "notice-overlay", minimized = false } = Astro.props;
+---
+
+<div id={id} class:list={["notice-overlay", { minimized }]}>
+  <div class="notice">
+    <div class="titlebar">
+      <span><slot name="title" /></span>
+      <span role="button" title="Minimize" id="notice-control">[x]</span>
+    </div>
+    <div class="content">
+      <slot />
+    </div>
+  </div>
+</div>
+
+<style>
+  .notice-overlay {
+    padding: 2em;
+    display: flex;
+    width: 100%;
+    height: 100%;
+    justify-content: flex-end;
+    z-index: 10;
+    pointer-events: none;
+
+    & .notice {
+      width: 50%;
+      height: min-content;
+      display: flex;
+      flex-direction: column;
+      user-select: text;
+      cursor: default;
+      background: #fff;
+      pointer-events: all;
+
+      & .titlebar {
+        padding: .5em 1em;
+        border: 2px solid black;
+        height: min-content;
+        display: flex;
+        justify-content: space-between;
+
+        #notice-control {
+          cursor: pointer;
+        }
+      }
+
+      & .content {
+        padding: 1em;
+        border: 2px solid black;
+        border-top: none;
+        height: min-content;
+        width: 100%;
+
+        display: flex;
+        flex-direction: column;
+        gap: 1em;
+      }
+    }
+
+    &.minimized {
+      & .notice {
+        width: 25%;
+        transition: width .25s;
+
+        &:hover {
+          opacity: 1;
+          width: 50%;
+        }
+
+        & .content {
+          display: none;
+        }
+      }
+    }
+  }
+</style>

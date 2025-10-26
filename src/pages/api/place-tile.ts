@@ -45,6 +45,25 @@ export const POST: APIRoute = async ({ request }) => {
     if (existingTile)
         return jsonError(409, "Position already occupied");
 
+    // Check if this is the first tile for this frame
+    const existingFrameTiles = await prisma.tile.findMany({
+        where: { frameId }
+    });
+
+    // For non-first tiles, validate adjacency requirement
+    if (existingFrameTiles.length > 0) {
+        const isAdjacent = existingFrameTiles.some(tile => {
+            const dx = Math.abs(tile.x - x);
+            const dy = Math.abs(tile.y - y);
+            // Adjacent means exactly one step away in x OR y direction (not diagonal)
+            return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
+        });
+
+        if (!isAdjacent) {
+            return jsonError(400, "Tiles must be placed adjacent to existing tiles of the same frame");
+        }
+    }
+
     const [tile, updatedFrame] = await prisma.$transaction([
         prisma.tile.create({
             data: {

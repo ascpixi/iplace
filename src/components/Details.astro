@@ -1,0 +1,42 @@
+---
+export interface Props {
+  open?: boolean;
+  summary: string;
+}
+
+const { open = false, summary } = Astro.props;
+---
+
+<details open={open}>
+  <summary>{summary}</summary>
+  <slot />
+</details>
+
+<style>
+  details {
+    &[open] {
+      summary {
+        &::marker {
+          content: "[v] ";
+        }
+      }
+    }
+
+    summary {
+      border: 2px solid black;
+      padding: .5em 1em;
+      cursor: pointer;
+
+      transition: background .25s, color .25s;
+      &:hover {
+        background: #000;
+        color: #fff;
+      }
+
+      &::marker {
+        margin-right: 32px;
+        content: "[>] ";
+      }
+    }
+  }
+</style>

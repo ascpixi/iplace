@@ -1,0 +1,94 @@
+---
+export interface Props {
+  id?: string;
+  title: string;
+  closeButtonId?: string;
+  hidden?: boolean;
+  class?: string;
+}
+
+const { 
+  id, 
+  title, 
+  closeButtonId = "modal-close", 
+  hidden = false,
+  class: className
+} = Astro.props;
+---
+
+<div 
+  id={id} 
+  class:list={["modal", className, { "modal-hidden": hidden }]}
+  style={hidden ? "display: none;" : undefined}
+>
+  <div class="modal-backdrop">
+    <div class="modal-window">
+      <div class="titlebar">
+        <div>{title}</div>
+        <div role="button" title="Close" id={closeButtonId}>[x]</div>
+      </div>
+      <div class="modal-content">
+        <slot />
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 20;
+
+    .modal-backdrop {
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2em;
+    }
+
+    .modal-window {
+      width: 90%;
+      height: 90%;
+      max-width: 900px;
+      max-height: 900px;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      
+      .titlebar {
+        padding: .5em 1em;
+        border: 2px solid black;
+        height: min-content;
+        display: flex;
+        justify-content: space-between;
+
+        :global([role="button"]) {
+          cursor: pointer;
+        }
+      }
+
+      .modal-content {
+        flex: 1;
+        border: 2px solid black;
+        border-top: none;
+        overflow: hidden;
+
+        :global(iframe) {
+          border: none;
+          display: block;
+        }
+      }
+    }
+  }
+
+  .modal-hidden {
+    display: none;
+  }
+</style>
