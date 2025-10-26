@@ -60,6 +60,18 @@ model Frame {
   ownerId   Int
   owner     User          @relation(fields: [ownerId], references: [id])
 
+  /// Whether this frame is pending approval.
+  isPending         Boolean     @default(true)
+
+  /// The approved time in seconds (sum of Hackatime project times).
+  approvedTime      Float       @default(0)
+
+  /// Number of tiles placed for this frame.
+  placedTiles       Int         @default(0)
+
+  /// Comma-delimited list of Hackatime project names.
+  projectNames      String
+
   tiles     Tile[]
 }
 
@@ -71,9 +83,6 @@ model Tile {
 
   /// The time that this tile has been created or modified at.
   placedAt    DateTime  @default(now())
-
-  /// Whether this tile is pending approval.
-  isPending   Boolean   @default(false)
 
   frameId     Int
   frame       Frame     @relation(fields: [frameId], references: [id])

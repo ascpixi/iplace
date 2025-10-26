@@ -42,6 +42,11 @@ export const GET: APIRoute = async (req) => {
     const name = slackUser.name;
     const profilePicture = slackUser.image_512 || slackUser.image_192 || slackUser.image_72;
 
+    // ugly, and very much temporary!
+    if (slackId != "U082DPCGPST") {
+        return new Response("Sorry, <iplace> is still under development! Please check back later.");
+    }
+
     // Find or create user
     let user = await prisma.user.findUnique({
         where: { slackId }

@@ -21,4 +21,5 @@ export const FRAME_CREATE_FORM_URL = "https://forms.hackclub.com/t/xmUF8UhZ3sus"
 /**
  * The date when the program began. This determines Hackatime project eligibility.
  */
-export const BEGIN_DATE = new Date("2025-10-25T23:59:59Z");
+// TODO: BE SURE TO CHANGE THIS!!!!
+export const BEGIN_DATE = new Date("2025-10-20T23:59:59Z");

@@ -38,33 +38,24 @@ export interface ApiMapResponse {
     tiles: ApiTile[];
     frames: ApiFrame[];
     authors: ApiAuthor[];
-    pendingTiles: ApiTile[];
 }
 
 export const GET: APIRoute = async ({ request }) => {
     const currentUser = await getCurrentUserFromRequest(request);
 
     const tiles = await prisma.tile.findMany({
-        where: { isPending: false }
-    });
-
-    let pendingTiles: Tile[] = [];
-    if (currentUser) {
-        pendingTiles = await prisma.tile.findMany({
-            where: {
-                isPending: true,
-                frame: {
-                    ownerId: currentUser.id
-                }
+        where: { 
+            frame: {
+                isPending: false 
             }
-        });
-    }
+        }
+    });
 
     // Relation processing - we only expose the entities we actually process.
     const frames: Frame[] = [];
     const authors: User[] = [];
 
-    for (const tile of [tiles, pendingTiles].flat()) {
+    for (const tile of tiles) {
         if (frames.some(x => x.id == tile.frameId))
             continue;
 
@@ -87,8 +78,7 @@ export const GET: APIRoute = async ({ request }) => {
     const response: ApiMapResponse = {
         authors: authors.map(x => ({ id: x.id, name: x.name, pfp: x.profilePicture })),
         frames: frames.map(x => ({ id: x.id, author: x.ownerId, url: x.url })),
-        tiles: tiles.map(x => ({ x: x.x, y: x.y, frame: x.frameId })),
-        pendingTiles: pendingTiles.map(x => ({ x: x.x, y: x.y, frame: x.frameId }))
+        tiles: tiles.map(x => ({ x: x.x, y: x.y, frame: x.frameId }))
     };
 
     return new Response(JSON.stringify(response));
