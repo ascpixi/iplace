@@ -13,8 +13,9 @@ RUN yarn install --frozen-lockfile
 
 FROM build-deps AS build
 COPY . .
-# Generate Prisma client
+# Generate Prisma client and apply migrations
 RUN yarn db:generate
+RUN npx prisma migrate deploy
 RUN yarn build
 
 FROM base AS runtime
