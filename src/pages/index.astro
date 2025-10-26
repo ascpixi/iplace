@@ -996,6 +996,24 @@ if (currentUser) {
           }
         });
       }
+
+      // Listen for frame creation completion from iframe
+      window.addEventListener("message", (event) => {
+        // Verify the origin for security
+        if (event.origin !== window.location.origin) {
+          return;
+        }
+        
+        if (event.data && event.data.type === "frameCreated") {
+          console.log("Frame created:", event.data.frame);
+          
+          // Close the modal
+          closeCreateFrameModal();
+          
+          // Refresh the page to show the new frame
+          window.location.reload();
+        }
+      });
     </script>
 
 
