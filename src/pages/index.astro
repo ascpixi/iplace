@@ -224,6 +224,10 @@ if (currentUser) {
       display: none;
     }
 
+    .no-frames-message {
+      padding: 1em;
+    }
+
   </style>
 
 	<body>
@@ -250,7 +254,7 @@ if (currentUser) {
         { currentUser ? (
           <Details summary="Your frames">
             <div class="content">
-              { userFrames.length == 0 && <p>You have no frames yet!</p> }
+              { userFrames.length == 0 && <p class="no-frames-message">You have no frames yet!</p> }
               
               { userFrames.map(frame => {
                 const availableTiles = frame.isPending ? 0 : Math.max(0, Math.floor((frame.approvedTime || 0) / 3600) - frame.placedTiles);
