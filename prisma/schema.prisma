@@ -75,6 +75,9 @@ model Frame {
   /// The time when this frame was created.
   createdAt         DateTime      @default(now())
 
+  /// The Airtable ID associated with the frame, which points to a record inside the YSWS base.
+  airtableId        String
+
   tiles     Tile[]
 }
 

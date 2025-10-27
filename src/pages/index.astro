@@ -881,7 +881,39 @@ if (currentUser) {
         currentHoverTileY = tileY;
       }
 
+      async function handleUpdateTimeClick(frameId: number) {
+        const confirmed = confirm(
+          "Are you sure you want to update your frame's time?\n\n" +
+          "This will send your project back to the review queue, but you'll get more tiles based on your updated coding time."
+        );
+        
+        if (!confirmed) {
+          return;
+        }
 
+        try {
+          const response = await fetch("/api/update-frame-time", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ frameId })
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            alert(result.message || "Frame has been sent back for review!");
+            // Refresh the page to show updated status
+            window.location.reload();
+          } else {
+            alert(`Error: ${result.message || "Failed to update frame time"}`);
+          }
+        } catch (error) {
+          console.error("Error updating frame time:", error);
+          alert("An error occurred while updating frame time. Please try again.");
+        }
+      }
 
       // Add event listeners for place tile buttons
       document.addEventListener("click", (ev) => {
@@ -895,6 +927,14 @@ if (currentUser) {
             } else {
               setPlaceMode(true, frameId);
             }
+          }
+        }
+        
+        // Handle update time button clicks
+        if (target && target.classList.contains("btn-update-time")) {
+          const frameId = parseInt(target.getAttribute("data-frame-id") || "0");
+          if (frameId > 0) {
+            handleUpdateTimeClick(frameId);
           }
         }
       });

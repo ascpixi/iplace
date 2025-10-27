@@ -28,6 +28,14 @@ const isAfterEndDate = new Date() >= new Date(END_DATE);
       Place tile ({availableTiles} available)
     </Button>
   )}
+  {!isPending && !isAfterEndDate && (
+    <Button 
+      class="btn-update-time" 
+      data-frame-id={frameId.toString()}
+    >
+      Update time
+    </Button>
+  )}
 </div>
 
 <style>
@@ -47,6 +55,10 @@ const isAfterEndDate = new Date() >= new Date(END_DATE);
       small {
         color: #000;
       }
+    }
+
+    .btn-update-time {
+      margin-top: 0.5em;
     }
   }
 </style>

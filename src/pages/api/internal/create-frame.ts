@@ -9,7 +9,8 @@ import prisma from "../../../lib/prisma";
 const CreateFrameSchema = InternalSecretSchema.extend({
     url: z.string().url("url must be a valid URL"),
     authorshipToken: z.string().min(1, "Authorship token is required"),
-    projectNames: z.string().min(1, "Project names are required")
+    projectNames: z.string().min(1, "Project names are required"),
+    airtableId: z.string().min(1, "Airtable IDs are required")
 });
 
 export const POST: APIRoute = async ({ request }) => {
@@ -17,7 +18,7 @@ export const POST: APIRoute = async ({ request }) => {
     if (!validation.success)
         return validation.response;
 
-    const { secret, url, authorshipToken, projectNames } = validation.data;
+    const { secret, url, authorshipToken, projectNames, airtableId } = validation.data;
 
     if (!validateInternalSecret(secret))
         return notAuthedResponse();
@@ -39,6 +40,7 @@ export const POST: APIRoute = async ({ request }) => {
             url,
             ownerId: owner.id,
             isPending: true,
+            airtableId,
             projectNames
         }
     });
