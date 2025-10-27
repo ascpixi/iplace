@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# Block form-forward page from indexing
+Disallow: /form-forward
+
+# Point to sitemap
+Sitemap: https://iplace.hackclub.com/sitemap.xml
+
+# Allow common crawl patterns
+Crawl-delay: 1

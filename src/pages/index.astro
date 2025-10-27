@@ -28,7 +28,81 @@ if (currentUser) {
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
     <link rel="preload" href={FRAME_CREATE_FORM_URL} as="document" />
-		<title>&lt;iplace&gt;</title>
+		
+		<title>&lt;iplace&gt; | Hack Club</title>
+		<meta name="description" content="Public canvas of websites in iframes. Code for an hour, place a 100x100px tile, get $5 hosting credit. By Hack Club." />
+		<meta name="keywords" content="hack club, iplace, public canvas, iframe, coding, teenagers, hosting credit, web development, programming" />
+		<meta name="author" content="Hack Club" />
+		<meta name="robots" content="index, follow" />
+		<link rel="canonical" href="https://iplace.hackclub.com" />
+		
+		<meta property="og:title" content="&lt;iplace&gt;" />
+		<meta property="og:description" content="Public canvas of websites in iframes. Code for an hour, place a 100x100px tile, get $5 hosting credit. By Hack Club." />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content="https://iplace.hackclub.com" />
+		<meta property="og:site_name" content="Hack Club" />
+		<meta property="og:locale" content="en_US" />
+		<!-- <meta property="og:image" content="https://iplace.hackclub.com/og-image.png" /> -->
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<!-- <meta property="og:image:alt" content="iplace - Public canvas of webpages by Hack Club" /> -->
+		
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content="&lt;iplace&gt;" />
+		<meta name="twitter:description" content="Public canvas of websites in iframes. Code for an hour, place a 100x100px tile, get $5 hosting credit. By Hack Club." />
+		<meta name="twitter:site" content="@hackclub" />
+		<meta name="twitter:creator" content="@hackclub" />
+		<!-- <meta name="twitter:image" content="https://iplace.hackclub.com/og-image.png" /> -->
+		<!-- <meta name="twitter:image:alt" content="iplace - Public canvas of webpages by Hack Club" /> -->
+
+		<meta name="theme-color" content="#ffffff" />
+		<meta name="mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+		<meta name="apple-mobile-web-app-title" content="iplace" />
+		
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link rel="preconnect" href="https://forms.hackclub.com" />
+		<link rel="dns-prefetch" href="https://hackclub.com" />
+		
+		<script type="application/ld+json">
+		{
+			"@context": "https://schema.org",
+			"@type": "WebApplication",
+			"name": "iplace",
+			"alternateName": "&lt;iplace&gt;",
+			"description": "Public canvas of websites in iframes. Code for an hour, place a 100x100px tile, get $5 hosting credit. By Hack Club.",
+			"url": "https://iplace.hackclub.com",
+			"applicationCategory": "DeveloperApplication",
+			"operatingSystem": "All",
+			"creator": {
+				"@type": "Organization",
+				"name": "Hack Club",
+				"url": "https://hackclub.com",
+				"sameAs": [
+					"https://twitter.com/hackclub",
+					"https://github.com/hackclub"
+				]
+			},
+			"audience": {
+				"@type": "Audience",
+				"audienceType": "Teenagers, Young Developers"
+			},
+			"featureList": [
+				"Place iframe tiles on public canvas",
+				"Earn hosting credit for coding time", 
+				"Interactive canvas exploration",
+				"Teen-focused coding community"
+			],
+			"offers": {
+				"@type": "Offer",
+				"price": "0",
+				"priceCurrency": "USD",
+				"description": "$5 hosting credit per hour of coding"
+			}
+		}
+		</script>
 	</head>
 
   <style is:global>
@@ -249,7 +323,7 @@ if (currentUser) {
 
       <p>
         Hold <b>Shift</b> and drag to explore the canvas.<br>
-        <span id="countdown-timer"></span>
+        <span id="countdown-timer" aria-live="polite"></span>
       </p>
 
       <div class="buttons">
