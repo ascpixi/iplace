@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
 import { validateRequestBody, jsonError, jsonResponse } from "../../lib/api-util";
-import { getCurrentUser } from "../../lib/server-auth";
+import { getUserFromRequest, notAuthedResponse } from "../../lib/auth";
 import prisma from "../../lib/prisma";
 
 const UpdateFrameTimeSchema = z.object({
@@ -43,9 +43,9 @@ export const POST: APIRoute = async ({ request }) => {
 
     const { frameId } = validation.data;
 
-    const currentUser = await getCurrentUser({ request } as any);
+    const currentUser = await getUserFromRequest(request);
     if (!currentUser) {
-        return jsonError(401, "Authentication required");
+        return notAuthedResponse();
     }
 
     const frame = await prisma.frame.findFirst({
