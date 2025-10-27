@@ -6,12 +6,12 @@ export const TILE_SIZE = 100;
 /**
  * The width of the canvas, in tiles.
  */
-export const CANVAS_WIDTH = 100;
+export const CANVAS_WIDTH = 50;
 
 /**
  * The height of the canvas, in tiles.
  */
-export const CANVAS_HEIGHT = 100;
+export const CANVAS_HEIGHT = 50;
 
 /**
  * The form used to create new frames.
