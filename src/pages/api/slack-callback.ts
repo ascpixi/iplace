@@ -41,7 +41,7 @@ export const GET: APIRoute = async (req) => {
     const slackUser = userResponse.user;
     const slackId = slackUser.id;
     const name = slackUser.name;
-    const profilePicture = slackUser.image_512 || slackUser.image_192 || slackUser.image_72;
+    const profilePicture = slackUser.image_512 || slackUser.image_192 || slackUser.image_72 || "PLACEHOLDER";
 
     if (new Date() < new Date(BEGIN_DATE)) {
         return new Response("Sorry, the event hasn't started yet!");
