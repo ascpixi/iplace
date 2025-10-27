@@ -71,8 +71,7 @@ export const POST: APIRoute = async ({ request }) => {
         const updatedFrame = await prisma.frame.update({
             where: { id: frameId },
             data: {
-                isPending: true,
-                approvedTime: 0 // Reset approved time since it will be recalculated
+                isPending: true
             }
         });
 
