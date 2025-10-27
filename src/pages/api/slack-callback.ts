@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import prisma from "../../lib/prisma";
 import { createSession } from "../../lib/auth";
+import { BEGIN_DATE } from "../../config";
 
 export const GET: APIRoute = async (req) => {
     const code = req.url.searchParams.get("code");
@@ -42,9 +43,8 @@ export const GET: APIRoute = async (req) => {
     const name = slackUser.name;
     const profilePicture = slackUser.image_512 || slackUser.image_192 || slackUser.image_72;
 
-    // ugly, and very much temporary!
-    if (slackId != "U082DPCGPST") {
-        return new Response("Sorry, <iplace> is still under development! Please check back later.");
+    if (new Date() < new Date(BEGIN_DATE)) {
+        return new Response("Sorry, the event hasn't started yet!");
     }
 
     let user = await prisma.user.findUnique({

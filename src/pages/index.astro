@@ -1,5 +1,5 @@
 ---
-import { TILE_SIZE, CANVAS_WIDTH, CANVAS_HEIGHT, FRAME_CREATE_FORM_URL } from "../config";
+import { TILE_SIZE, CANVAS_WIDTH, CANVAS_HEIGHT, FRAME_CREATE_FORM_URL, BEGIN_DATE } from "../config";
 import { getCurrentUser } from "../lib/server-auth";
 
 import prisma from "../lib/prisma";
@@ -12,6 +12,7 @@ import Details from "../components/Details.astro";
 import Modal from "../components/Modal.astro";
 
 const currentUser = await getCurrentUser(Astro);
+const eventHasStarted = new Date() >= new Date(BEGIN_DATE);
 let userFrames: db.Frame[] = [];
 if (currentUser) {
   userFrames = await prisma.frame.findMany({
@@ -273,9 +274,9 @@ if (currentUser) {
               <Button id="btn-create-frame">Create a frame</Button>
             </div>
           </Details>
-        ) : (
+        ) : eventHasStarted ? (
           <Button id="btn-login">Log in with Hack Club's Slack</Button>
-        ) }
+        ) : null }
 
         <Button id="btn-random">Take me somewhere random</Button>
       </div>
@@ -1253,22 +1254,35 @@ if (currentUser) {
     </script>
 
     <script>
-      import { END_DATE } from "../config";
+      import { BEGIN_DATE, END_DATE } from "../config";
 
       function updateCountdown() {
         const now = new Date();
+        const beginDate = new Date(BEGIN_DATE);
         const endDate = new Date(END_DATE);
         const timerElement = document.getElementById("countdown-timer");
         
         if (!timerElement) return;
 
-        if (now >= endDate) {
+        if (now < beginDate) {
+          // Event hasn't started yet
+          const timeDiff = beginDate.getTime() - now.getTime();
+          
+          const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+          
+          timerElement.innerHTML = `Event starts in <b>${days}d ${hours}h ${minutes}m ${seconds}s</b>.`;
+        } else if (now >= endDate) {
+          // Event has ended
           timerElement.innerHTML = `Submissions ended on ${endDate.toLocaleDateString("en-US", { 
             year: "numeric", 
             month: "long", 
             day: "numeric" 
           })}.`;
         } else {
+          // Event is active
           const timeDiff = endDate.getTime() - now.getTime();
           
           const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
