@@ -11,12 +11,13 @@ const UpdateFrameTimeSchema = z.object({
 async function updateAirtableRecord(airtableId: string): Promise<void> {
     const airtableApiKey = import.meta.env.AIRTABLE_API_KEY;
     const airtableBaseId = import.meta.env.AIRTABLE_BASE_ID;
+    const airtableTableId = import.meta.env.AIRTABLE_TABLE_ID;
     
-    if (!airtableApiKey || !airtableBaseId) {
+    if (!airtableApiKey || !airtableBaseId || !airtableTableId) {
         throw new Error("Airtable API credentials not configured");
     }
 
-    const response = await fetch(`https://api.airtable.com/v0/${airtableBaseId}/Submissions/${airtableId}`, {
+    const response = await fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTableId}/${airtableId}`, {
         method: 'PATCH',
         headers: {
             'Authorization': `Bearer ${airtableApiKey}`,
