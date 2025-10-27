@@ -1,5 +1,6 @@
 ---
 import Button from './Button.astro';
+import { END_DATE } from '../config';
 
 export interface Props {
   frameId: number;
@@ -10,6 +11,7 @@ export interface Props {
 }
 
 const { frameId, title, url, availableTiles, isPending = false } = Astro.props;
+const isAfterEndDate = new Date() >= new Date(END_DATE);
 ---
 
 <div class="frame-item">
@@ -17,7 +19,7 @@ const { frameId, title, url, availableTiles, isPending = false } = Astro.props;
     <strong>{title}</strong><br />
     <small>{isPending ? 'Pending approval!' : `Available tiles: ${availableTiles}`}</small>
   </div>
-  {availableTiles > 0 && (
+  {availableTiles > 0 && !isAfterEndDate && (
     <Button 
       class="btn-place-tile" 
       data-frame-id={frameId.toString()}

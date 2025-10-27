@@ -247,7 +247,8 @@ if (currentUser) {
       </p>
 
       <p>
-        Hold <b>Shift</b> and drag to explore the canvas.
+        Hold <b>Shift</b> and drag to explore the canvas.<br>
+        <span id="countdown-timer"></span>
       </p>
 
       <div class="buttons">
@@ -1249,6 +1250,41 @@ if (currentUser) {
           window.location.reload();
         }
       });
+    </script>
+
+    <script>
+      import { END_DATE } from "../config";
+
+      function updateCountdown() {
+        const now = new Date();
+        const endDate = new Date(END_DATE);
+        const timerElement = document.getElementById("countdown-timer");
+        
+        if (!timerElement) return;
+
+        if (now >= endDate) {
+          timerElement.innerHTML = `Submissions ended on ${endDate.toLocaleDateString("en-US", { 
+            year: "numeric", 
+            month: "long", 
+            day: "numeric" 
+          })}.`;
+        } else {
+          const timeDiff = endDate.getTime() - now.getTime();
+          
+          const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+          
+          timerElement.innerHTML = `Submissions end in <b>${days}d ${hours}h ${minutes}m ${seconds}s</b>.`;
+        }
+      }
+
+      // Update immediately
+      updateCountdown();
+      
+      // Update every second
+      setInterval(updateCountdown, 1000);
     </script>
 
 
